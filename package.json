@@ -1,0 +1,35 @@
+{
+  "name": "slack-crm",
+  "version": "0.0.1",
+  "description": "Slack bot for custom crm.",
+  "main": "src/start.js",
+  "scripts": {
+    "start": "nodemon babel-node",
+    "build": "NODE_ENV=production babel src --out-dir dist --source-maps inline"
+  },
+  "dependencies": {
+    "@slack/client": "^5.0.2",
+    "body-parser": "^1.19.0",
+    "ding-dong": "^0.1.7",
+    "dotenv": "^8.2.0",
+    "express": "^4.16.4",
+    "log4js": "^6.0.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.7.2",
+    "@babel/node": "^7.7.0",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/register": "^7.7.0",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-import": "^2.18.2",
+    "nodemon": "^1.19.4"
+  },
+  "author": "awbait",
+  "license": "ISC"
+}

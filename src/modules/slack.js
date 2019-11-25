@@ -1,0 +1,368 @@
+import dotenv from 'dotenv';
+import { WebClient } from '@slack/client';
+import * as request from './request';
+import logger from './logger';
+import stringToArr from './utils';
+import { formIncallAtt, formIncallAttBlacklist } from './modals';
+
+dotenv.config();
+const slack = new WebClient(process.env.XOXB);
+const channelId = process.env.SLACK_CHANNEL;
+
+/**
+ * Отправить сообщение в канал slack
+ * @param  {object} objectArg - Объект аргументов
+ * https://api.slack.com/methods/chat.postMessage
+ */
+export function slackSendMessage(objectArg) {
+  slack.chat
+    .postMessage(objectArg)
+    .then((res) => {
+      logger.info(`SLACK:: Отправлено сообщение в ${objectArg.channel}`, res.message.text);
+    })
+    .catch((error) => {
+      logger.error(error);
+    });
+}
+
+/**
+ * @param  {string} phoneFrom
+ * Номер телефона звонящего
+ * @param  {string} phoneTo
+ * Номер телефона куда звонят
+ */
+export async function sendCallerNotify(phoneFrom, phoneTo) {
+  const callerName = await request.getNameCaller(phoneFrom);
+  const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
+  const incallAtt = formIncallAtt(phoneFrom, phoneTo, callerName);
+  const incallAttBlacklist = formIncallAttBlacklist(phoneFrom, phoneTo);
+
+  // console.log('PhoneIsBlacklist', isBlacklisted);
+  if (isBlacklisted) {
+    slackSendMessage({
+      channel: channelId,
+      blocks: incallAttBlacklist.blocks,
+      icon_emoji: ':no_mobile_phones:',
+      username: 'BlackBot',
+    });
+  } else {
+    slackSendMessage({
+      channel: channelId,
+      blocks: incallAtt.blocks,
+      icon_emoji: ':telephone_receiver:',
+    });
+  }
+  return logger.info(`PHONE:: Поступил звонок от ${phoneFrom}`);
+}
+
+export function slackHandleEvents() {
+
+}
+
+export async function slackUpdateMessage(objectArg) {
+  slack.chat.update(objectArg);
+}
+
+// FIXME: Обобщить функцию для многоразового использования
+// В данный момент годится только для изменения одной кнопки (Добавить в ЧС на селект с причинами)
+async function updateMessage(message) {
+  try {
+    const msg = message;
+    const { value } = message.actions[0];
+    const messageBlock = {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Привязать',
+          },
+          style: 'primary',
+          value: 'click_me_123',
+        },
+        {
+          type: 'static_select',
+          action_id: 'blacklist_reasons',
+          placeholder: {
+            type: 'plain_text',
+            text: 'Выберите причину',
+            emoji: true,
+          },
+          confirm: {
+            title: {
+              type: 'plain_text',
+              text: 'Подтверждение',
+            },
+            text: {
+              type: 'mrkdwn',
+              text: 'Вы подтверждаете добавление номера в черный список?',
+            },
+            confirm: {
+              type: 'plain_text',
+              text: 'Добавить',
+            },
+            deny: {
+              type: 'plain_text',
+              text: 'Отменить',
+            },
+          },
+          options: [
+            {
+              text: {
+                type: 'plain_text',
+                text: 'Спам',
+                emoji: true,
+              },
+              value: `${value},${1}`,
+            },
+            {
+              text: {
+                type: 'plain_text',
+                text: 'Реклама',
+                emoji: true,
+              },
+              value: `${value},${2}`,
+            },
+            {
+              text: {
+                type: 'plain_text',
+                text: 'Другая причина',
+                emoji: true,
+              },
+              value: `${value},${3}`,
+            },
+          ],
+        },
+      ],
+    };
+    msg.message.blocks[1] = messageBlock;
+    const result = await slack.chat.update({
+      channel: message.channel.id,
+      ts: message.message.ts,
+      blocks: message.message.blocks,
+    });
+    logger.info('SLACK:: Обновлено сообщение:', result.ts);
+  } catch (error) {
+    logger.error('updateMessage', error);
+  }
+}
+
+async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason) {
+  try {
+    let time = timestamp;
+    let chnl = channel;
+    if (time.length > 20) {
+      time = stringToArr(time);
+      const [,,, ts] = time;
+      time = ts;
+    }
+    if (chnl === undefined) {
+      chnl = channelId;
+    }
+    const blocks = [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text:
+            'Коллеги, входящий звонок на 612-35-20!\n'
+            + 'Предположительно: *<http://192.168.78.7:4203/#/clients/1|Транслайн>*\n'
+            + 'Звонят с номера: 78126123520',
+          verbatim: false,
+        },
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `:x: <@${userId}> добавил номер в черный список: ${reason}`,
+        },
+      },
+    ];
+    const result = await slack.chat.update({
+      channel: chnl,
+      ts: time,
+      blocks,
+    });
+    logger.info('SLACK:: Обновлено сообщение:', result.ts);
+  } catch (error) {
+    logger.error('readyUpdateMessageBlacklist', error);
+  }
+}
+
+function formModalBlacklist(phones, previousId) {
+  const random = Math.random()
+    .toString(36)
+    .substring(7);
+  const modal = {
+    type: 'modal',
+    private_metadata: `${phones},${previousId}`,
+    external_id: `modal_blacklist_${random}`, // TODO: Параметр для обработки разных модальных окон
+    clear_on_close: false,
+    notify_on_close: false,
+    title: {
+      type: 'plain_text',
+      text: 'Добавить номер в ЧС',
+      emoji: true,
+    },
+    submit: {
+      type: 'plain_text',
+      text: 'Добавить',
+      emoji: true,
+    },
+    close: {
+      type: 'plain_text',
+      text: 'Отменить',
+      emoji: true,
+    },
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'plain_text',
+          text: 'Введите причину, по которой добавляете номер в черный список.',
+          emoji: true,
+        },
+      },
+      {
+        type: 'input',
+        block_id: 'blacklist_comment',
+        element: {
+          type: 'plain_text_input',
+          action_id: 'comment',
+          multiline: true,
+          placeholder: {
+            type: 'plain_text',
+            text: 'Введите что-нибудь',
+          },
+        },
+        label: {
+          type: 'plain_text',
+          text: 'Причина',
+        },
+      },
+    ],
+  };
+
+  return modal;
+}
+
+/**
+ * Функция обновления сообщения при успешном добавлении номера в ЧС.
+ * @param  {integer} userId - Slack ID пользователя который добавил номер в ЧС
+ * @param  {string} timestamp - Точка времени, по которому находим сообщение которое нужно изменить
+ * @param  {string} channel - ID Slack канала в котором изменяем сообщение
+ * @param  {string} reason - Причина добавления номера в ЧС
+ */
+
+function openModal(trigger, phones, previousId) {
+  const blacklist = formModalBlacklist(phones, previousId);
+  (async () => {
+    try {
+      const result = await slack.views.open({
+        trigger_id: trigger,
+        view: blacklist,
+      });
+      logger.info(`SLACK:: Отрыто модальное окно: ${result.view.id}`);
+    } catch (error) {
+      logger.error(error);
+    }
+  })();
+}
+
+export async function slackHandleActions(res, payload) {
+  switch (payload.type) {
+    case 'interactive_message':
+      break;
+
+    case 'view_submission':
+      /*
+        Данные поступающие из формы (модального окна)
+        Обрабатываем по payload.view.external_id
+        Зарезервированные значения:
+        - modal_blacklist_id (Открываем по значению в селекте "Другая причина")
+
+        TODO: В данный момент используем IF, в дальнейшем нужен будет handle
+      */
+      if (payload.view.external_id.startsWith('modal_blacklist_')) {
+        /*
+        console.log(payload.view.state.values); - Поступившие ланные
+        Подготавливаем данные для отправки и обновляем сообщение с уведомлением:
+        (Пользователь *** добавил номер в ЧС)
+        logger.debug(payload);
+        */
+        // console.log(payload);
+        const reason = await request.phoneAddToBlacklist(
+          payload.view.private_metadata,
+          payload.view.state.values.blacklist_comment.comment.value,
+          payload.user.username,
+        );
+        readyUpdateMessageBlacklist(
+          payload.user.id,
+          payload.view.private_metadata,
+          undefined,
+          reason.comment,
+        );
+      }
+      break;
+
+    case 'block_actions':
+      /*
+        Обрабатываем по payload.actions[0].actions_id
+        Зарезервированые значения:
+        - blacklist_add (Кнопка "Добавить в ЧС")
+        - blacklsit_reasons (Выбранная причина в селекте)
+      */
+      switch (payload.actions[0].action_id) {
+        case 'blacklist_add':
+          // Мы должны обновить сообщение
+          // (заменить кнопку "Добавить в ЧС" на селект с разными причинами)
+          updateMessage(payload);
+          break;
+        case 'blacklist_reasons':
+          // Нужна проверка на выбранное значение,
+          // если причина "другая" открываем модальное окно, иначе формируем данные и отправляем
+          console.log(payload.actions[0].selected_option);
+          if (
+            payload.actions[0].selected_option.text.text === 'Другая причина'
+          ) {
+            // Выбрано значение "Другая причина"
+            // Открываем модальное окно с полем ввода причины
+            openModal(
+              payload.trigger_id,
+              payload.actions[0].selected_option.value,
+              payload.message.ts,
+            );
+          } else {
+            // Подготавливаем данные для отправки и обновляем сообщение с уведомлением
+            // (Пользователь *** добавил номер в ЧС)
+            const reason = await request.phoneAddToBlacklist(
+              payload.actions[0].selected_option.value,
+              payload.actions[0].selected_option.text.text,
+              payload.user.username,
+            );
+            readyUpdateMessageBlacklist(
+              payload.user.id,
+              payload.message.ts,
+              payload.channel.id,
+              reason.comment,
+            );
+          }
+          break;
+        default:
+          logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
+          break;
+      }
+      break;
+    case 'view_closed':
+      logger.debug('HANDLE-ACTIONS:: Необъявленная форма была закрыта');
+
+      break;
+    default:
+      logger.warn('HANDLE-ACTIONS:: Поступили данные неизвестного типа:', payload);
+      break;
+  }
+  res.status(200).end();
+}
