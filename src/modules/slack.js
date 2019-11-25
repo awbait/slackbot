@@ -2,8 +2,8 @@ import dotenv from 'dotenv';
 import { WebClient } from '@slack/client';
 import * as request from './request';
 import logger from './logger';
-import stringToArr from './utils';
-import { formIncallAtt, formIncallAttBlacklist } from './modals';
+import { stringToArr, generateId, objectAssign } from './utils';
+import { formIncallAtt, formIncallAttBlacklist, modalSearchClient } from './modals';
 
 dotenv.config();
 const slack = new WebClient(process.env.XOXB);
@@ -53,10 +53,6 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
     });
   }
   return logger.info(`PHONE:: Поступил звонок от ${phoneFrom}`);
-}
-
-export function slackHandleEvents() {
-
 }
 
 export async function slackUpdateMessage(objectArg) {
@@ -193,9 +189,7 @@ async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason) {
 }
 
 function formModalBlacklist(phones, previousId) {
-  const random = Math.random()
-    .toString(36)
-    .substring(7);
+  const random = generateId();
   const modal = {
     type: 'modal',
     private_metadata: `${phones},${previousId}`,
@@ -248,6 +242,22 @@ function formModalBlacklist(phones, previousId) {
 
   return modal;
 }
+/**
+ * @param  {string} trigger - Slack trigger id
+ * @param  {object} template - Шаблон открываемого окна
+ */
+async function slackOpenModal(trigger, template) {
+  try {
+    const result = await slack.views.open({
+      trigger_id: trigger,
+      view: template,
+    });
+    logger.info(`SLACK:: Открыто модальное окно: ${result.view.id}`);
+    logger.trace('SLACK:: Результат открытия модального окна', result);
+  } catch (error) {
+    logger.error(error);
+  }
+}
 
 /**
  * Функция обновления сообщения при успешном добавлении номера в ЧС.
@@ -265,7 +275,7 @@ function openModal(trigger, phones, previousId) {
         trigger_id: trigger,
         view: blacklist,
       });
-      logger.info(`SLACK:: Отрыто модальное окно: ${result.view.id}`);
+      logger.info(`SLACK:: Открыто модальное окно: ${result.view.id}`);
     } catch (error) {
       logger.error(error);
     }
@@ -277,37 +287,34 @@ export async function slackHandleActions(res, payload) {
     case 'interactive_message':
       break;
 
-    case 'view_submission':
-      /*
-        Данные поступающие из формы (модального окна)
-        Обрабатываем по payload.view.external_id
-        Зарезервированные значения:
-        - modal_blacklist_id (Открываем по значению в селекте "Другая причина")
+    case 'view_submission': {
+      const id = payload.view.external_id.split('_')[1];
 
-        TODO: В данный момент используем IF, в дальнейшем нужен будет handle
-      */
-      if (payload.view.external_id.startsWith('modal_blacklist_')) {
-        /*
-        console.log(payload.view.state.values); - Поступившие ланные
-        Подготавливаем данные для отправки и обновляем сообщение с уведомлением:
-        (Пользователь *** добавил номер в ЧС)
-        logger.debug(payload);
-        */
-        // console.log(payload);
-        const reason = await request.phoneAddToBlacklist(
-          payload.view.private_metadata,
-          payload.view.state.values.blacklist_comment.comment.value,
-          payload.user.username,
-        );
-        readyUpdateMessageBlacklist(
-          payload.user.id,
-          payload.view.private_metadata,
-          undefined,
-          reason.comment,
-        );
+      switch (id) {
+        case 'blacklist': {
+          const reason = await request.phoneAddToBlacklist(
+            payload.view.private_metadata,
+            payload.view.state.values.blacklist_comment.comment.value,
+            payload.user.username,
+          );
+          readyUpdateMessageBlacklist(
+            payload.user.id,
+            payload.view.private_metadata,
+            undefined,
+            reason.comment,
+          );
+          break;
+        }
+        case 'searchclient': {
+          console.log('Что-то сделать если получили данные');
+          break;
+        }
+        default:
+          logger.warn(`HANDLE-ACTION: view_submission:: Поступили данные неизвестного типа: ${id}`, payload);
+          break;
       }
       break;
-
+    }
     case 'block_actions':
       /*
         Обрабатываем по payload.actions[0].actions_id
@@ -362,6 +369,24 @@ export async function slackHandleActions(res, payload) {
       break;
     default:
       logger.warn('HANDLE-ACTIONS:: Поступили данные неизвестного типа:', payload);
+      break;
+  }
+  res.status(200).end();
+}
+
+export function slackHandleEvents(res, payload) {
+  console.length(res, payload);
+}
+
+export function slackHandleCommands(res, payload) {
+  switch (payload.command) {
+    case '/searchclient': {
+      const template = objectAssign(modalSearchClient, { external_id: generateId('modal_searchclient_') });
+      slackOpenModal(payload.trigger_id, template);
+      break;
+    }
+    default:
+      logger.warn('HANDLE-COMMANDS:: Поступили данные неизвестного типа:', payload);
       break;
   }
   res.status(200).end();

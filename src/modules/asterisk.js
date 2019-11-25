@@ -19,7 +19,5 @@ const handler = async (context) => {
     .then(() => context.end());
 };
 
-export default function asteriskInit() {
-  const agi = new AGIServer(handler);
-  agi.start(process.env.ASTERISK_PORT);
-}
+const agi = new AGIServer(handler);
+agi.start(process.env.ASTERISK_PORT);

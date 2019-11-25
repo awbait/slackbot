@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import logger from './modules/logger';
-import { slackHandleActions, slackHandleEvents } from './modules/slack';
+import { slackHandleActions, slackHandleEvents, slackHandleCommands } from './modules/slack';
 
 dotenv.config({ path: './.env' });
 
@@ -46,7 +46,7 @@ process.on('SIGTERM', shutDown);
 process.on('SIGINT', shutDown);
 
 // Routes
-app.post('/slack/actions', async (req, res) => {
+app.post('/slack/actions', (req, res) => {
   let payload = req.body;
 
   if (payload.challenge) {
@@ -55,22 +55,29 @@ app.post('/slack/actions', async (req, res) => {
   } else if (payload.payload && typeof payload.payload === 'string') {
     payload = JSON.parse(payload.payload);
     logger.debug(`POST /slack/actions: Поступили данные типа: ${payload.type}`);
-    logger.trace(`POST /slack/actions: ${payload}`);
+    logger.trace('POST /slack/actions:', payload);
     slackHandleActions(res, payload);
   }
 });
 
-app.post('/slack/events', async (req, res) => {
-  let payload = req.body;
-
+app.post('/slack/events', (req, res) => {
+  const payload = req.body;
   if (payload.challenge) {
     res.setHeader('content-type', 'application/json');
     res.status(200).json({ challenge: payload.challenge });
   } else if (payload.event && payload.event.type === 'app_mention') {
-    payload = JSON.parse(payload.payload);
-    logger.debug(`POST /slack/events: Поступили данные типа: ${payload.type}`);
-    logger.trace(`POST /slack/events: ${payload}`);
+    logger.debug(`POST /slack/events: Поступили данные типа: ${payload.event.type}`);
+    logger.trace('POST /slack/events:', payload);
     slackHandleEvents(res, payload);
     res.status(200).end();
+  }
+});
+
+app.post('/slack/commands', (req, res) => {
+  const payload = req.body;
+  if (payload.command) {
+    logger.debug(`POST /slack/commands: Поступили данные команды: ${payload.command}`);
+    logger.trace('POST /slack/commands:', payload);
+    slackHandleCommands(res, payload);
   }
 });

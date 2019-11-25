@@ -4,7 +4,7 @@
  * @param  {string} phoneTo - Номер на который звонят
  * @param  {object} client - Объект клиента из базы данных
  */
-function formIncallAtt(phoneFrom, phoneTo, client) {
+export function formIncallAtt(phoneFrom, phoneTo, client) {
   let message;
   if (client) {
     if (client.is_company) {
@@ -61,7 +61,7 @@ function formIncallAtt(phoneFrom, phoneTo, client) {
  * @param  {string} phoneFrom - Номер звонящего
  * @param  {string} phoneTo - Номер на который звонят (Не используется)
  */
-function formIncallAttBlacklist(phoneFrom) {
+export function formIncallAttBlacklist(phoneFrom) {
   const message = `Коллеги, входящий звонок на 612-35-20!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFrom}`;
 
   const template = {
@@ -79,4 +79,39 @@ function formIncallAttBlacklist(phoneFrom) {
   return template;
 }
 
-export { formIncallAtt, formIncallAttBlacklist };
+export const modalSearchClient = {
+  type: 'modal',
+  external_id: 'modal_searchclient_',
+  title: {
+    type: 'plain_text',
+    text: 'Поиск клиента',
+    emoji: true,
+  },
+  submit: {
+    type: 'plain_text',
+    text: 'Поиск',
+    emoji: true,
+  },
+  close: {
+    type: 'plain_text',
+    text: 'Отмена',
+    emoji: true,
+  },
+  blocks: [
+    {
+      type: 'input',
+      element: {
+        type: 'plain_text_input',
+        placeholder: {
+          type: 'plain_text',
+          text: 'Начните вводить название',
+        },
+      },
+      label: {
+        type: 'plain_text',
+        text: 'Поиск клиента',
+        emoji: true,
+      },
+    },
+  ],
+};
