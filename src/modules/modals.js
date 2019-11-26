@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+const front_url = process.env.FRONT_URL;
 /**
  * Формирует вложение сообщения при входящем звонке
  * @param  {string} phoneFrom - Номер звонящего
@@ -166,22 +170,13 @@ export function searchClientList(clients, value) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
+          text: `*<${front_url}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
         },
     }
     const phone = client.phones.find(phone => phone.is_main === true).tel_number;
     const email = client.emails.find(email => email.is_main === true).address;
 
-    
+
   }
   const template = {
     type: 'modal',
