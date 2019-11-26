@@ -159,25 +159,8 @@ export const addPhoneBlacklist = {
 export function searchClientList(clients, value) {
   // кол-во записей
   // значение по которому мы находили клиентов
-  // массив объектов выбранных клиентов
+  // массив объектов выбранных клиентов  
   const clientCount = clients.lenght;
-
-  for (let client in clients) {
-    const divider = {
-      type: 'divider',
-    }
-    const template = {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*<${front_url}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
-        },
-    }
-    const phone = client.phones.find(phone => phone.is_main === true).tel_number;
-    const email = client.emails.find(email => email.is_main === true).address;
-
-
-  }
   const template = {
     type: 'modal',
     title: {
@@ -205,5 +188,24 @@ export function searchClientList(clients, value) {
       },
     ],
   };
+
+  for (let client in clients) {
+    const divider = {
+      type: 'divider',
+    }
+    const phone = client.phones.find(phone => phone.is_main === true).tel_number;
+    const email = client.emails.find(email => email.is_main === true).address;
+    const section = {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<${front_url}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
+        },
+    }
+    
+    template.blocks.push(divider);
+    template.blocks.push(section);
+  }
+  
   return template;
 }

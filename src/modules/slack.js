@@ -224,6 +224,7 @@ export async function slackHandleActions(res, payload) {
           // посмотреть где достать те символы которые мы ввели и передать их в функцию ниже
           console.log(payload.view.state.values);
           const clients = await request.searchClients('Транс');
+          // шаблон
           modal.searchClientList(clients);
           break;
         }
