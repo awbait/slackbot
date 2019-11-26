@@ -94,8 +94,10 @@ export const searchClient = {
   blocks: [
     {
       type: 'input',
+      block_id: 'searchclient_phrase',
       element: {
         type: 'plain_text_input',
+        action_id: 'phrase',
         placeholder: {
           type: 'plain_text',
           text: 'Начните вводить название',
@@ -155,11 +157,11 @@ export const addPhoneBlacklist = {
     },
   ],
 };
-
+/**
+ * @param  {array} clients - Массив найденных компаний
+ * @param  {string} value - Значение по которому находили компанию
+ */
 export function searchClientList(clients, value) {
-  // кол-во записей
-  // значение по которому мы находили клиентов
-  // массив объектов выбранных клиентов
   const clientCount = clients.length;
   const template = {
     type: 'modal',
@@ -188,24 +190,37 @@ export function searchClientList(clients, value) {
       },
     ],
   };
+  const divider = {
+    type: 'divider',
+  };
+  if (clientCount !== 0) {
+    clients.forEach((client) => {
+      const phone = client.phones.length !== 0 ? client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number : 'Нет данных';
+      const email = client.emails.length !== 0 ? client.emails.find((emailVal) => emailVal.is_main === true).address : 'Нет данных';
+      // TODO: Проверка is_company для полного отображения имени компании/человека
+      const section = {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
+        },
+      };
 
-  clients.forEach((client) => {
-    const divider = {
-      type: 'divider',
-    };
-    const phone = client.phones.length !== 0 ? client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number : '';
-    const email = client.emails.length !== 0 ? client.emails.find((emailVal) => emailVal.is_main === true).address : '';
+      template.blocks.push(divider);
+      template.blocks.push(section);
+    });
+  } else {
     const section = {
       type: 'section',
       text: {
-        type: 'mrkdwn',
-        text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
+        type: 'plain_text',
+        text: ':no_entry: Клиент не найден',
+        emoji: true,
       },
     };
-
     template.blocks.push(divider);
     template.blocks.push(section);
-  });
+  }
 
   return template;
 }

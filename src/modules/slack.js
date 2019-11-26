@@ -35,9 +35,9 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
   const callerName = await request.getNameCaller(phoneFrom);
   const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
   const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
-  const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
 
   if (isBlacklisted) {
+    const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
     slackSendMessage({
       channel: channelId,
       blocks: incallAttBlacklist.blocks,
@@ -174,7 +174,7 @@ async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason, n
     });
     logger.info('SLACK:: Обновлено сообщение:', result.ts);
   } catch (error) {
-    logger.error('readyUpdateMessageBlacklist', error);
+    logger.error('SLACK:: readyUpdateMessageBlacklist:', error);
   }
 }
 
