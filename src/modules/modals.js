@@ -159,7 +159,25 @@ export function searchClientList(clients, value) {
   const clientCount = clients.lenght;
 
   for (let client in clients) {
-    
+    const divider = {
+      type: 'divider',
+    }
+    const template = {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+    },
   }
   const template = {
     type: 'modal',
