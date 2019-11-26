@@ -3,7 +3,7 @@ import { WebClient } from '@slack/client';
 import * as request from './request';
 import logger from './logger';
 import { stringToArr, generateId, objectAssign } from './utils';
-import { formIncallAtt, formIncallAttBlacklist, modalSearchClient } from './modals';
+import * as modal from './modals';
 
 dotenv.config();
 const slack = new WebClient(process.env.XOXB);
@@ -34,8 +34,8 @@ export function slackSendMessage(objectArg) {
 export async function sendCallerNotify(phoneFrom, phoneTo) {
   const callerName = await request.getNameCaller(phoneFrom);
   const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
-  const incallAtt = formIncallAtt(phoneFrom, phoneTo, callerName);
-  const incallAttBlacklist = formIncallAttBlacklist(phoneFrom, phoneTo);
+  const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
+  const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
 
   // console.log('PhoneIsBlacklist', isBlacklisted);
   if (isBlacklisted) {
@@ -68,16 +68,6 @@ async function updateMessage(message) {
     const messageBlock = {
       type: 'actions',
       elements: [
-        {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Привязать',
-          },
-          style: 'primary',
-          value: 'click_me_123',
-        },
         {
           type: 'static_select',
           action_id: 'blacklist_reasons',
@@ -145,14 +135,16 @@ async function updateMessage(message) {
   }
 }
 
-async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason) {
+async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason, number) {
   try {
     let time = timestamp;
     let chnl = channel;
+    let phone = number;
     if (time.length > 20) {
       time = stringToArr(time);
-      const [,,, ts] = time;
+      const [, ph,, ts] = time;
       time = ts;
+      phone = ph;
     }
     if (chnl === undefined) {
       chnl = channelId;
@@ -163,9 +155,8 @@ async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason) {
         text: {
           type: 'mrkdwn',
           text:
-            'Коллеги, входящий звонок на 612-35-20!\n'
-            + 'Предположительно: *<http://192.168.78.7:4203/#/clients/1|Транслайн>*\n'
-            + 'Звонят с номера: 78126123520',
+            'Коллеги, входящий звонок на 385-49-50!\n'
+            + `Звонят с номера: ${phone}`,
           verbatim: false,
         },
       },
@@ -188,60 +179,6 @@ async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason) {
   }
 }
 
-function formModalBlacklist(phones, previousId) {
-  const random = generateId();
-  const modal = {
-    type: 'modal',
-    private_metadata: `${phones},${previousId}`,
-    external_id: `modal_blacklist_${random}`, // TODO: Параметр для обработки разных модальных окон
-    clear_on_close: false,
-    notify_on_close: false,
-    title: {
-      type: 'plain_text',
-      text: 'Добавить номер в ЧС',
-      emoji: true,
-    },
-    submit: {
-      type: 'plain_text',
-      text: 'Добавить',
-      emoji: true,
-    },
-    close: {
-      type: 'plain_text',
-      text: 'Отменить',
-      emoji: true,
-    },
-    blocks: [
-      {
-        type: 'section',
-        text: {
-          type: 'plain_text',
-          text: 'Введите причину, по которой добавляете номер в черный список.',
-          emoji: true,
-        },
-      },
-      {
-        type: 'input',
-        block_id: 'blacklist_comment',
-        element: {
-          type: 'plain_text_input',
-          action_id: 'comment',
-          multiline: true,
-          placeholder: {
-            type: 'plain_text',
-            text: 'Введите что-нибудь',
-          },
-        },
-        label: {
-          type: 'plain_text',
-          text: 'Причина',
-        },
-      },
-    ],
-  };
-
-  return modal;
-}
 /**
  * @param  {string} trigger - Slack trigger id
  * @param  {object} template - Шаблон открываемого окна
@@ -259,30 +196,8 @@ async function slackOpenModal(trigger, template) {
   }
 }
 
-/**
- * Функция обновления сообщения при успешном добавлении номера в ЧС.
- * @param  {integer} userId - Slack ID пользователя который добавил номер в ЧС
- * @param  {string} timestamp - Точка времени, по которому находим сообщение которое нужно изменить
- * @param  {string} channel - ID Slack канала в котором изменяем сообщение
- * @param  {string} reason - Причина добавления номера в ЧС
- */
-
-function openModal(trigger, phones, previousId) {
-  const blacklist = formModalBlacklist(phones, previousId);
-  (async () => {
-    try {
-      const result = await slack.views.open({
-        trigger_id: trigger,
-        view: blacklist,
-      });
-      logger.info(`SLACK:: Открыто модальное окно: ${result.view.id}`);
-    } catch (error) {
-      logger.error(error);
-    }
-  })();
-}
-
 export async function slackHandleActions(res, payload) {
+  res.status(200).end();
   switch (payload.type) {
     case 'interactive_message':
       break;
@@ -297,6 +212,7 @@ export async function slackHandleActions(res, payload) {
             payload.view.state.values.blacklist_comment.comment.value,
             payload.user.username,
           );
+          console.log(payload.view.private_metadata);
           readyUpdateMessageBlacklist(
             payload.user.id,
             payload.view.private_metadata,
@@ -335,13 +251,8 @@ export async function slackHandleActions(res, payload) {
           if (
             payload.actions[0].selected_option.text.text === 'Другая причина'
           ) {
-            // Выбрано значение "Другая причина"
-            // Открываем модальное окно с полем ввода причины
-            openModal(
-              payload.trigger_id,
-              payload.actions[0].selected_option.value,
-              payload.message.ts,
-            );
+            const template = objectAssign(modal.addPhoneBlacklist, { external_id: generateId('modal_blacklist_'), private_metadata: `${payload.actions[0].selected_option.value},${payload.message.ts}` });
+            slackOpenModal(payload.trigger_id, template);
           } else {
             // Подготавливаем данные для отправки и обновляем сообщение с уведомлением
             // (Пользователь *** добавил номер в ЧС)
@@ -371,7 +282,6 @@ export async function slackHandleActions(res, payload) {
       logger.warn('HANDLE-ACTIONS:: Поступили данные неизвестного типа:', payload);
       break;
   }
-  res.status(200).end();
 }
 
 export function slackHandleEvents(res, payload) {
@@ -381,7 +291,7 @@ export function slackHandleEvents(res, payload) {
 export function slackHandleCommands(res, payload) {
   switch (payload.command) {
     case '/searchclient': {
-      const template = objectAssign(modalSearchClient, { external_id: generateId('modal_searchclient_') });
+      const template = objectAssign(modal.searchClient, { external_id: generateId('modal_searchclient_') });
       slackOpenModal(payload.trigger_id, template);
       break;
     }

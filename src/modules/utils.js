@@ -1,4 +1,4 @@
-export async function stringToArr(string) {
+export function stringToArr(string) {
   const arr = string.split(/[\s,]+/);
   return arr;
 }

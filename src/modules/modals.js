@@ -29,16 +29,6 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
         elements: [
           {
             type: 'button',
-            text: {
-              type: 'plain_text',
-              emoji: true,
-              text: 'Привязать',
-            },
-            style: 'primary',
-            value: 'click_me_123',
-          },
-          {
-            type: 'button',
             action_id: 'blacklist_add',
             text: {
               type: 'plain_text',
@@ -62,7 +52,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
  * @param  {string} phoneTo - Номер на который звонят (Не используется)
  */
 export function formIncallAttBlacklist(phoneFrom) {
-  const message = `Коллеги, входящий звонок на 612-35-20!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFrom}`;
+  const message = `Коллеги, входящий звонок на 385-49-50!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFrom}`;
 
   const template = {
     blocks: [
@@ -79,7 +69,7 @@ export function formIncallAttBlacklist(phoneFrom) {
   return template;
 }
 
-export const modalSearchClient = {
+export const searchClient = {
   type: 'modal',
   external_id: 'modal_searchclient_',
   title: {
@@ -115,3 +105,198 @@ export const modalSearchClient = {
     },
   ],
 };
+
+export const addPhoneBlacklist = {
+  type: 'modal',
+  title: {
+    type: 'plain_text',
+    text: 'Добавить номер в ЧС',
+    emoji: true,
+  },
+  submit: {
+    type: 'plain_text',
+    text: 'Добавить',
+    emoji: true,
+  },
+  close: {
+    type: 'plain_text',
+    text: 'Отменить',
+    emoji: true,
+  },
+  blocks: [
+    {
+      type: 'section',
+      text: {
+        type: 'plain_text',
+        text: 'Введите причину, по которой добавляете номер в черный список.',
+        emoji: true,
+      },
+    },
+    {
+      type: 'input',
+      block_id: 'blacklist_comment',
+      element: {
+        type: 'plain_text_input',
+        action_id: 'comment',
+        multiline: true,
+        placeholder: {
+          type: 'plain_text',
+          text: 'Введите что-нибудь',
+        },
+      },
+      label: {
+        type: 'plain_text',
+        text: 'Причина',
+      },
+    },
+  ],
+};
+
+export function searchClientList() {
+  // кол-во записей
+  // значение по которому мы находили клиентов
+  const template = {
+    type: 'modal',
+    title: {
+      type: 'plain_text',
+      text: 'Найдено 2 клиента',
+      emoji: true,
+    },
+    submit: {
+      type: 'plain_text',
+      text: 'Submit',
+      emoji: true,
+    },
+    close: {
+      type: 'plain_text',
+      text: 'Cancel',
+      emoji: true,
+    },
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: ':mag: Найденные результаты по: *Тра*',
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+      },
+
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+      },
+
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+      },
+
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+      },
+
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
+        },
+        accessory: {
+          type: 'button',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Показать',
+          },
+          value: 'click_me_123',
+        },
+      },
+
+      {
+        type: 'divider',
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              emoji: true,
+              text: 'Следующие 5 результатов?',
+            },
+            value: 'click_me_123',
+          },
+        ],
+      },
+    ],
+  };
+}
