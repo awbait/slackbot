@@ -160,7 +160,7 @@ export function searchClientList(clients, value) {
   // кол-во записей
   // значение по которому мы находили клиентов
   // массив объектов выбранных клиентов  
-  const clientCount = clients.lenght;
+  const clientCount = clients.length;
   const template = {
     type: 'modal',
     title: {
