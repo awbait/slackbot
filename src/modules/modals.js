@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 
 dotenv.config();
-const front_url = process.env.FRONT_URL;
+const frontUrl = process.env.FRONT_URL;
 /**
  * Формирует вложение сообщения при входящем звонке
  * @param  {string} phoneFrom - Номер звонящего
@@ -12,7 +12,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
   let message;
   if (client) {
     if (client.is_company) {
-      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *<http://192.168.78.7:4203/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFrom}`;
     } else {
       message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFrom}`;
     }
@@ -159,7 +159,7 @@ export const addPhoneBlacklist = {
 export function searchClientList(clients, value) {
   // кол-во записей
   // значение по которому мы находили клиентов
-  // массив объектов выбранных клиентов  
+  // массив объектов выбранных клиентов
   const clientCount = clients.length;
   const template = {
     type: 'modal',
@@ -189,25 +189,23 @@ export function searchClientList(clients, value) {
     ],
   };
 
-  for (let client in clients) {
-    client = clients[client];
-    console.log(client)
+  clients.forEach((client) => {
     const divider = {
       type: 'divider',
-    }
-    const phone = client.phones.length !== 0 ? client.phones.find(phone => phone.is_main === true).tel_number : '';
-    const email = client.emails.length !== 0 ? client.emails.find(email => email.is_main === true).address : '';
+    };
+    const phone = client.phones.length !== 0 ? client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number : '';
+    const email = client.emails.length !== 0 ? client.emails.find((emailVal) => emailVal.is_main === true).address : '';
     const section = {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*<${front_url}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
-        },
-    }
-    
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
+      },
+    };
+
     template.blocks.push(divider);
     template.blocks.push(section);
-  }
-  
+  });
+
   return template;
 }
