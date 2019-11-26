@@ -1,12 +1,15 @@
+import dotenv from 'dotenv';
 import request from 'request-promise';
 import logger from './logger';
 
+dotenv.config();
+const url = process.env.REQUEST_URL;
 let headers;
 
-async function getAuthToken() {
+export async function getAuthToken() {
   const options = {
     method: 'POST',
-    uri: 'http://192.168.79.31/auth/sign_in',
+    uri: `${url}/auth/sign_in`,
     body: {
       username: 'bot',
       password: '11034597Lm5Lin5868',
@@ -16,12 +19,12 @@ async function getAuthToken() {
     time: true,
   };
   const response = await request(options);
-  logger.debug(`REQUEST: getAuthToken:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000}s`);
+  logger.debug(`REQUEST: getAuthToken:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
   logger.trace('REQUEST-HEADERS: getAuthToken::', response.headers);
   return response.headers;
 }
 
-async function checkAuthToken(header) {
+export async function checkAuthToken(header) {
   // Если ErrorStatusCode 401
   if (header === null || header === undefined) {
     const response = await getAuthToken();
@@ -36,24 +39,9 @@ async function checkAuthToken(header) {
 }
 checkAuthToken();
 
-async function validateAuthToken() {
+export async function getNameCaller(phone) {
   const options = {
-    method: 'GET',
-    uri: 'http://192.168.79.31/auth/validate_token',
-    headers,
-    resolveWithFullResponse: true,
-    json: true,
-    time: true,
-  };
-  const res = await request(options);
-  logger.debug('Запрос выполнился за:', res.elapsedTime);
-  // console.log(res);
-  return res.headers;
-}
-
-async function getNameCaller(phone) {
-  const options = {
-    uri: 'http://192.168.79.31/api/clients',
+    uri: `${url}/api/clients`,
     qs: {
       searchtel: phone,
     },
@@ -64,15 +52,15 @@ async function getNameCaller(phone) {
   };
   checkAuthToken();
   const response = await request(options);
-  logger.debug(`REQUEST: getNameCaller:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} ms`);
+  logger.debug(`REQUEST: getNameCaller:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
   logger.trace('REQUEST-HEADERS: getNameCaller::', response.headers);
   checkAuthToken(response.headers);
   return response.body;
 }
 
-async function getWorkerId(workerName) {
+export async function getWorkerId(workerName) {
   const options = {
-    uri: 'http://192.168.79.31/api/telephony_blacklists',
+    uri: `${url}/api/telephony_blacklists`,
     qs: {
       workerid: workerName,
     },
@@ -101,9 +89,9 @@ async function getWorkerId(workerName) {
  * @param  {string} phoneNumber Номер телефона
  * @returns {boolean} Вернет true или false
  */
-async function checkPhoneBlacklist(phoneNumber) {
+export async function checkPhoneBlacklist(phoneNumber) {
   const options = {
-    uri: 'http://192.168.79.31/api/telephony_blacklists',
+    uri: `${url}/api/telephony_blacklists`,
     qs: {
       num_is_ban: phoneNumber,
     },
@@ -120,13 +108,13 @@ async function checkPhoneBlacklist(phoneNumber) {
   return response.body;
 }
 
-async function phoneAddToBlacklist(phones, comment, worker) {
+export async function phoneAddToBlacklist(phones, comment, worker) {
   const userId = await getWorkerId(worker);
   const phone = phones.split(/[\s,]+/);
 
   const options = {
     method: 'POST',
-    uri: 'http://192.168.79.31/api/telephony_blacklists',
+    uri: `${url}/api/telephony_blacklists`,
     body: {
       tel_from: parseInt(phone[0], 10),
       tel_to: parseInt(phone[1], 10),
@@ -142,12 +130,27 @@ async function phoneAddToBlacklist(phones, comment, worker) {
   checkAuthToken();
   const response = await request(options);
 
-  logger.debug(`REQUEST: phoneAddToBlacklist:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} ms`);
+  logger.debug(`REQUEST: phoneAddToBlacklist:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
   logger.trace('REQUEST-HEADERS: phoneAddToBlacklist::', response.headers);
   checkAuthToken(response.headers);
   return response.body;
 }
 
-export {
-  getAuthToken, getNameCaller, getWorkerId, checkPhoneBlacklist, phoneAddToBlacklist,
-};
+export async function searchClients(string) {
+  const options = {
+    uri: `${url}/api/clients`,
+    qs: {
+      search: string,
+    },
+    headers,
+    resolveWithFullResponse: true,
+    json: true,
+    time: true,
+  };
+  checkAuthToken();
+  const response = await request(options);
+
+  logger.debug(`REQUEST: searchClients:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
+  logger.trace('REQUEST-HEADERS: searchClients::', response.headers);
+  return response.body;
+}

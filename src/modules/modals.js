@@ -8,12 +8,12 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
   let message;
   if (client) {
     if (client.is_company) {
-      message = `Коллеги, входящий звонок на 612-35-20!\nПредположительно: *<http://192.168.78.7:4203/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *<http://192.168.78.7:4203/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFrom}`;
     } else {
-      message = `Коллеги, входящий звонок на 612-35-20!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFrom}`;
     }
   } else {
-    message = `Коллеги, входящий звонок на 612-35-20! Звонят с номера: ${phoneFrom}`;
+    message = `Коллеги, входящий звонок на 385-49-50! Звонят с номера: ${phoneFrom}`;
   }
   const template = {
     blocks: [
@@ -152,9 +152,10 @@ export const addPhoneBlacklist = {
   ],
 };
 
-export function searchClientList() {
+export function searchClientList(clients) {
   // кол-во записей
   // значение по которому мы находили клиентов
+  // массив объектов выбранных клиентов
   const template = {
     type: 'modal',
     title: {
@@ -199,104 +200,7 @@ export function searchClientList() {
           value: 'click_me_123',
         },
       },
-
-      {
-        type: 'divider',
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
-        },
-      },
-
-      {
-        type: 'divider',
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
-        },
-      },
-
-      {
-        type: 'divider',
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
-        },
-      },
-
-      {
-        type: 'divider',
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
-        },
-      },
-
-      {
-        type: 'divider',
-      },
-      {
-        type: 'actions',
-        elements: [
-          {
-            type: 'button',
-            text: {
-              type: 'plain_text',
-              emoji: true,
-              text: 'Следующие 5 результатов?',
-            },
-            value: 'click_me_123',
-          },
-        ],
-      },
     ],
   };
+  return template;
 }

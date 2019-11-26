@@ -37,7 +37,6 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
   const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
   const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
 
-  // console.log('PhoneIsBlacklist', isBlacklisted);
   if (isBlacklisted) {
     slackSendMessage({
       channel: channelId,
@@ -222,7 +221,10 @@ export async function slackHandleActions(res, payload) {
           break;
         }
         case 'searchclient': {
-          console.log('Что-то сделать если получили данные');
+          // посмотреть где достать те символы которые мы ввели и передать их в функцию ниже
+          console.log(payload.view.state.values);
+          const clients = await request.searchClients('Транс');
+          modal.searchClientList(clients);
           break;
         }
         default:
