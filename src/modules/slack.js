@@ -225,7 +225,8 @@ export async function slackHandleActions(res, payload) {
           console.log(payload.view.state.values);
           const clients = await request.searchClients('Транс');
           // шаблон
-          modal.searchClientList(clients);
+          const template = modal.searchClientList(clients);
+          slackOpenModal(payload.trigger_id, template);
           break;
         }
         default:

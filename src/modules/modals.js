@@ -190,6 +190,8 @@ export function searchClientList(clients, value) {
   };
 
   for (let client in clients) {
+    client = clients[client];
+    console.log(client)
     const divider = {
       type: 'divider',
     }
