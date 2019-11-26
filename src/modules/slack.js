@@ -221,12 +221,9 @@ export async function slackHandleActions(res, payload) {
           break;
         }
         case 'searchclient': {
-          // посмотреть где достать те символы которые мы ввели и передать их в функцию ниже
-          console.log(payload.view.state.values);
-          const clients = await request.searchClients('Транс');
-          // шаблон
-          const template = await modal.searchClientList(clients, 'транс');
-          console.log(template);
+          const value = payload.view.state.values.searchclient_phrase.phrase;
+          const clients = await request.searchClients(value);
+          const template = modal.searchClientList(clients, value);
           slackOpenModal(payload.trigger_id, template);
           break;
         }
