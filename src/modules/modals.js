@@ -195,8 +195,8 @@ export function searchClientList(clients, value) {
     const divider = {
       type: 'divider',
     }
-    const phone = client.phones.find(phone => phone.is_main === true).tel_number;
-    const email = client.emails.find(email => email.is_main === true).address;
+    const phone = client.phones.length !== 0 ? client.phones.find(phone => phone.is_main === true).tel_number : '';
+    const email = client.emails.length !== 0 ? client.emails.find(email => email.is_main === true).address : '';
     const section = {
         type: 'section',
         text: {

@@ -221,7 +221,7 @@ export async function searchClients(string) {
         "phones": [
             {
                 "tel_number": "76565656565",
-                "is_main": false
+                "is_main": true
             },
             {
                 "tel_number": "79280003366",
