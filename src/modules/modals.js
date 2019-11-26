@@ -152,25 +152,30 @@ export const addPhoneBlacklist = {
   ],
 };
 
-export function searchClientList(clients) {
+export function searchClientList(clients, value) {
   // кол-во записей
   // значение по которому мы находили клиентов
   // массив объектов выбранных клиентов
+  const clientCount = clients.lenght;
+
+  for (let client in clients) {
+    
+  }
   const template = {
     type: 'modal',
     title: {
       type: 'plain_text',
-      text: 'Найдено 2 клиента',
+      text: `Найдено ${clientCount} клиента`,
       emoji: true,
     },
     submit: {
       type: 'plain_text',
-      text: 'Submit',
+      text: 'Вперед',
       emoji: true,
     },
     close: {
       type: 'plain_text',
-      text: 'Cancel',
+      text: 'Отмена',
       emoji: true,
     },
     blocks: [
@@ -178,26 +183,7 @@ export function searchClientList(clients) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: ':mag: Найденные результаты по: *Тра*',
-        },
-      },
-      {
-        type: 'divider',
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '*<fakeLink.toYourApp.com|Название компании>*\nОписание или какая-либо информация',
-        },
-        accessory: {
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Показать',
-          },
-          value: 'click_me_123',
+          text: `:mag: Найденные результаты по: *${value}*`,
         },
       },
     ],
