@@ -1,23 +1,27 @@
 import dotenv from 'dotenv';
+import { formatPhoneNumber } from './utils';
 
 dotenv.config();
 const frontUrl = process.env.FRONT_URL;
+
 /**
- * Формирует вложение сообщения при входящем звонке
+ * Формирует сообщение при входящем звонке
  * @param  {string} phoneFrom - Номер звонящего
  * @param  {string} phoneTo - Номер на который звонят
  * @param  {object} client - Объект клиента из базы данных
  */
 export function formIncallAtt(phoneFrom, phoneTo, client) {
+  const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
+  const phoneToFormatted = formatPhoneNumber(phoneTo);
   let message;
   if (client) {
     if (client.is_company) {
-      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFromFormatted}`;
     } else {
-      message = `Коллеги, входящий звонок на 385-49-50!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFromFormatted}`;
     }
   } else {
-    message = `Коллеги, входящий звонок на 385-49-50! Звонят с номера: ${phoneFrom}`;
+    message = `Коллеги, входящий звонок на ${phoneToFormatted}! Звонят с номера: ${phoneFromFormatted}`;
   }
   const template = {
     text: message,
@@ -52,12 +56,14 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
 }
 
 /**
- * Формирует вложение при входящем звонке, если номер находится в черном списке
+ * Формирует сообщение при входящем звонке, если номер находится в черном списке
  * @param  {string} phoneFrom - Номер звонящего
- * @param  {string} phoneTo - Номер на который звонят (Не используется)
+ * @param  {string} phoneTo - Номер на который поступил звонок
  */
-export function formIncallAttBlacklist(phoneFrom) {
-  const message = `Коллеги, входящий звонок на 385-49-50!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFrom}`;
+export function formIncallAttBlacklist(phoneFrom, phoneTo) {
+  const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
+  const phoneToFormatted = formatPhoneNumber(phoneTo);
+  const message = `Коллеги, входящий звонок на ${phoneToFormatted}!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFromFormatted}`;
 
   const template = {
     text: message,
@@ -296,6 +302,45 @@ export function blacklistSelect(message) {
     channel: msg.channel.id,
     ts: msg.message.ts,
     blocks: msg.message.blocks,
+  };
+  return objectArg;
+}
+/**
+ * Формирует измененное сообщение при добавлении номера в ЧС
+ * @param  {string} userId - slack user id
+ * @param  {string} timestamp - Точка времени сообщения
+ * @param  {string} channel - Канал где изменяем сообщение
+ * @param  {string} reason - Причина добавления в ЧС
+ * @param  {string} phoneTo - Номер на который был произведен вызов
+ * @param  {string} phoneFrom - Номер с которого звонили
+ */
+export function blacklistMessageUpdate(userId, timestamp, channel, reason, phoneFrom, phoneTo) {
+  const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
+  const phoneToFormatted = formatPhoneNumber(phoneTo);
+
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text:
+          `Коллеги, входящий звонок на ${phoneToFormatted}!\n`
+          + `Звонят с номера: ${phoneFromFormatted}`,
+        verbatim: false,
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `:x: <@${userId}> добавил номер в черный список: ${reason}`,
+      },
+    },
+  ];
+  const objectArg = {
+    channel,
+    ts: timestamp,
+    blocks,
   };
   return objectArg;
 }

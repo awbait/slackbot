@@ -9,17 +9,14 @@ const handler = async (context) => {
   context
     .onEvent('variables')
     .then((vars) => {
-      // TODO: Переработать проверку формирования номера телефона на который поступает звонок
-      // В дальшейшем может использоваться для определения канала отправки сообщений
-      let callerTo;
-      logger.info(vars);
-      if (vars.agi_context === 'ivr-4169120') {
-        callerTo = '78126123520';
-      } else if (vars.agi_context === '3854950day') {
-        callerTo = '78123854950';
-      }
-      callerTo = '78123854950';
+      const phones = {
+        'ivr-4169120': '78126123520',
+        '3854950day': '78123854950', // Исправить ivr
+      };
+      let callerTo = phones[vars.agi_context];
+      callerTo = '78123854950'; // FIXME: Перед релизом новой версии убрать
       sendCallerNotify(vars.agi_callerid, callerTo);
+      logger.trace('ASTERISK: Поступил входящий вызов::', vars);
     })
     .then(() => context.end());
 };

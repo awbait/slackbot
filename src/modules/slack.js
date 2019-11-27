@@ -9,6 +9,11 @@ dotenv.config();
 const slack = new WebClient(process.env.XOXB);
 const channelId = process.env.SLACK_CHANNEL;
 
+const channels = {
+  78123854950: 'C8JCHPXAN',
+  78126123520: 'CDH9N4QNL',
+};
+
 /**
  * Отправить сообщение в канал slack
  * @param  {object} objectArg - Объект аргументов
@@ -41,9 +46,7 @@ export async function slackUpdateMessage(objectArg) {
  * Номер телефона куда звонят
  */
 export async function sendCallerNotify(phoneFrom, phoneTo) {
-  const callerName = await request.getNameCaller(phoneFrom);
   const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
-  const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
 
   if (isBlacklisted) {
     const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
@@ -55,57 +58,14 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       username: 'BlackBot',
     });
   } else {
+    const callerName = await request.getNameCaller(phoneFrom);
+    const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
     slackSendMessage({
       channel: channelId,
       text: incallAtt.text,
       blocks: incallAtt.blocks,
       icon_emoji: ':telephone_receiver:',
     });
-  }
-  return logger.info(`PHONE:: Поступил звонок от ${phoneFrom}`);
-}
-
-async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason, number) {
-  try {
-    let time = timestamp;
-    let chnl = channel;
-    let phone = number;
-    if (time.length > 20) {
-      time = stringToArr(time);
-      const [, ph,, ts] = time;
-      time = ts;
-      phone = ph;
-    }
-    if (chnl === undefined) {
-      chnl = channelId;
-    }
-    const blocks = [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text:
-            'Коллеги, входящий звонок на 385-49-50!\n'
-            + `Звонят с номера: ${phone}`,
-          verbatim: false,
-        },
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `:x: <@${userId}> добавил номер в черный список: ${reason}`,
-        },
-      },
-    ];
-    const result = await slack.chat.update({
-      channel: chnl,
-      ts: time,
-      blocks,
-    });
-    logger.info('SLACK:: Обновлено сообщение:', result.ts);
-  } catch (error) {
-    logger.error('SLACK:: readyUpdateMessageBlacklist:', error);
   }
 }
 
@@ -137,18 +97,23 @@ export async function slackHandleActions(res, payload) {
 
       switch (id) {
         case 'blacklist': {
+          const metadata = stringToArr(payload.view.private_metadata);
+          const channel = channels[metadata[1]];
           const reason = await request.phoneAddToBlacklist(
-            payload.view.private_metadata,
+            metadata[0],
+            metadata[1],
             payload.view.state.values.blacklist_comment.comment.value,
             payload.user.username,
           );
-          console.log(payload.view.private_metadata);
-          readyUpdateMessageBlacklist(
+          const objectArg = modal.blacklistMessageUpdate(
             payload.user.id,
-            payload.view.private_metadata,
-            undefined,
+            metadata[3],
+            channel,
             reason.comment,
+            metadata[0],
+            metadata[1],
           );
+          slackUpdateMessage(objectArg);
           break;
         }
         case 'searchclient': {
@@ -190,19 +155,15 @@ export async function slackHandleActions(res, payload) {
             const template = objectAssign(modal.addPhoneBlacklist, { external_id: generateId('modal_blacklist_'), private_metadata: `${payload.actions[0].selected_option.value},${payload.message.ts}` });
             slackOpenModal(payload.trigger_id, template);
           } else {
-            // Подготавливаем данные для отправки и обновляем сообщение с уведомлением
-            // (Пользователь *** добавил номер в ЧС)
+            const phones = stringToArr(payload.actions[0].selected_option.value);
             const reason = await request.phoneAddToBlacklist(
-              payload.actions[0].selected_option.value,
+              phones[0],
+              phones[1],
               payload.actions[0].selected_option.text.text,
               payload.user.username,
             );
-            readyUpdateMessageBlacklist(
-              payload.user.id,
-              payload.message.ts,
-              payload.channel.id,
-              reason.comment,
-            );
+            const objectArg = modal.blacklistMessageUpdate(payload.user.id, payload.message.ts, payload.channel.id, reason.comment, phones[0], phones[1]);
+            slackUpdateMessage(objectArg);
           }
           break;
         default:
