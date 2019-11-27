@@ -24,6 +24,15 @@ export function slackSendMessage(objectArg) {
       logger.error(error);
     });
 }
+/**
+ * Обновить сообщение по временной метке (ts)
+ * @param  {object} objectArg - Объект аргументов
+ * https://api.slack.com/methods/chat.update
+ */
+export async function slackUpdateMessage(objectArg) {
+  const result = await slack.chat.update(objectArg);
+  logger.info('SLACK: updateMessage:: Обновлено сообщение:', result.ts);
+}
 
 /**
  * @param  {string} phoneFrom
@@ -40,6 +49,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
     const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
     slackSendMessage({
       channel: channelId,
+      text: incallAttBlacklist.text,
       blocks: incallAttBlacklist.blocks,
       icon_emoji: ':no_mobile_phones:',
       username: 'BlackBot',
@@ -47,91 +57,12 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
   } else {
     slackSendMessage({
       channel: channelId,
+      text: incallAtt.text,
       blocks: incallAtt.blocks,
       icon_emoji: ':telephone_receiver:',
     });
   }
   return logger.info(`PHONE:: Поступил звонок от ${phoneFrom}`);
-}
-
-export async function slackUpdateMessage(objectArg) {
-  slack.chat.update(objectArg);
-}
-
-// FIXME: Обобщить функцию для многоразового использования
-// В данный момент годится только для изменения одной кнопки (Добавить в ЧС на селект с причинами)
-async function updateMessage(message) {
-  try {
-    const msg = message;
-    const { value } = message.actions[0];
-    const messageBlock = {
-      type: 'actions',
-      elements: [
-        {
-          type: 'static_select',
-          action_id: 'blacklist_reasons',
-          placeholder: {
-            type: 'plain_text',
-            text: 'Выберите причину',
-            emoji: true,
-          },
-          confirm: {
-            title: {
-              type: 'plain_text',
-              text: 'Подтверждение',
-            },
-            text: {
-              type: 'mrkdwn',
-              text: 'Вы подтверждаете добавление номера в черный список?',
-            },
-            confirm: {
-              type: 'plain_text',
-              text: 'Добавить',
-            },
-            deny: {
-              type: 'plain_text',
-              text: 'Отменить',
-            },
-          },
-          options: [
-            {
-              text: {
-                type: 'plain_text',
-                text: 'Спам',
-                emoji: true,
-              },
-              value: `${value},${1}`,
-            },
-            {
-              text: {
-                type: 'plain_text',
-                text: 'Реклама',
-                emoji: true,
-              },
-              value: `${value},${2}`,
-            },
-            {
-              text: {
-                type: 'plain_text',
-                text: 'Другая причина',
-                emoji: true,
-              },
-              value: `${value},${3}`,
-            },
-          ],
-        },
-      ],
-    };
-    msg.message.blocks[1] = messageBlock;
-    const result = await slack.chat.update({
-      channel: message.channel.id,
-      ts: message.message.ts,
-      blocks: message.message.blocks,
-    });
-    logger.info('SLACK:: Обновлено сообщение:', result.ts);
-  } catch (error) {
-    logger.error('updateMessage', error);
-  }
 }
 
 async function readyUpdateMessageBlacklist(userId, timestamp, channel, reason, number) {
@@ -241,11 +172,14 @@ export async function slackHandleActions(res, payload) {
         - blacklsit_reasons (Выбранная причина в селекте)
       */
       switch (payload.actions[0].action_id) {
-        case 'blacklist_add':
+        case 'blacklist_add': {
           // Мы должны обновить сообщение
           // (заменить кнопку "Добавить в ЧС" на селект с разными причинами)
-          updateMessage(payload);
+          // updateMessage(payload);
+          const msg = modal.blacklistSelect(payload);
+          slackUpdateMessage(msg);
           break;
+        }
         case 'blacklist_reasons':
           // Нужна проверка на выбранное значение,
           // если причина "другая" открываем модальное окно, иначе формируем данные и отправляем

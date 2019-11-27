@@ -20,6 +20,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
     message = `Коллеги, входящий звонок на 385-49-50! Звонят с номера: ${phoneFrom}`;
   }
   const template = {
+    text: message,
     blocks: [
       {
         type: 'section',
@@ -59,6 +60,7 @@ export function formIncallAttBlacklist(phoneFrom) {
   const message = `Коллеги, входящий звонок на 385-49-50!\n*Номер находится в черном списке!*\nЗвонят с номера: ${phoneFrom}`;
 
   const template = {
+    text: message,
     blocks: [
       {
         type: 'section',
@@ -158,6 +160,7 @@ export const addPhoneBlacklist = {
   ],
 };
 /**
+ * Формирование модального окна с найденными клиентами
  * @param  {array} clients - Массив найденных компаний
  * @param  {string} value - Значение по которому находили компанию
  */
@@ -202,7 +205,7 @@ export function searchClientList(clients, value) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*`,
+          text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*\n:office: Адрес: *Тест*`,
         },
       };
 
@@ -223,4 +226,76 @@ export function searchClientList(clients, value) {
   }
 
   return template;
+}
+
+export function blacklistSelect(message) {
+  const msg = message;
+  const { value } = msg.actions[0];
+
+  const messageBlock = {
+    type: 'actions',
+    elements: [
+      {
+        type: 'static_select',
+        action_id: 'blacklist_reasons',
+        placeholder: {
+          type: 'plain_text',
+          text: 'Выберите причину',
+          emoji: true,
+        },
+        confirm: {
+          title: {
+            type: 'plain_text',
+            text: 'Подтверждение',
+          },
+          text: {
+            type: 'mrkdwn',
+            text: 'Вы подтверждаете добавление номера в черный список?',
+          },
+          confirm: {
+            type: 'plain_text',
+            text: 'Добавить',
+          },
+          deny: {
+            type: 'plain_text',
+            text: 'Отменить',
+          },
+        },
+        options: [
+          {
+            text: {
+              type: 'plain_text',
+              text: 'Спам',
+              emoji: true,
+            },
+            value: `${value},${1}`,
+          },
+          {
+            text: {
+              type: 'plain_text',
+              text: 'Реклама',
+              emoji: true,
+            },
+            value: `${value},${2}`,
+          },
+          {
+            text: {
+              type: 'plain_text',
+              text: 'Другая причина',
+              emoji: true,
+            },
+            value: `${value},${3}`,
+          },
+        ],
+      },
+    ],
+  };
+
+  msg.message.blocks[1] = messageBlock;
+  const objectArg = {
+    channel: msg.channel.id,
+    ts: msg.message.ts,
+    blocks: msg.message.blocks,
+  };
+  return objectArg;
 }
