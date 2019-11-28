@@ -202,3 +202,59 @@ export function slackHandleCommands(payload) {
       break;
   }
 }
+
+function testSendMsg() {
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
+        emoji: true,
+      },
+    },
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: '<@DR2V6T93R> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
+      },
+    },
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          action_id: 'blacklist_add',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Добавить в ЧС',
+          },
+          style: 'danger',
+          value: '12312312/3/12/3/123',
+        },
+        {
+          type: 'button',
+          action_id: 'status_change',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Комментарий',
+          },
+          style: 'primary',
+          value: '123123',
+        },
+      ],
+    },
+  ];
+
+
+  slackSendMessage({
+    channel: 'CQ957CR8X',
+    text: 'Уведомление',
+    blocks,
+    icon_emoji: ':telephone_receiver:',
+  });
+}
+testSendMsg();

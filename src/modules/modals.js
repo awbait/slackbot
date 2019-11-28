@@ -21,7 +21,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFromFormatted}`;
     }
   } else {
-    message = `Коллеги, входящий звонок на ${phoneToFormatted}! Звонят с номера: ${phoneFromFormatted}`;
+    message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонят с номера: ${phoneFromFormatted}`;
   }
   const template = {
     text: message,
