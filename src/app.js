@@ -56,7 +56,8 @@ app.post('/slack/actions', (req, res) => {
     payload = JSON.parse(payload.payload);
     logger.debug(`POST /slack/actions: Поступили данные типа: ${payload.type}`);
     logger.trace('POST /slack/actions:', payload);
-    slackHandleActions(res, payload);
+    res.status(200).end();
+    slackHandleActions(payload);
   }
 });
 
@@ -68,8 +69,8 @@ app.post('/slack/events', (req, res) => {
   } else if (payload.event && payload.event.type === 'app_mention') {
     logger.debug(`POST /slack/events: Поступили данные типа: ${payload.event.type}`);
     logger.trace('POST /slack/events:', payload);
-    slackHandleEvents(res, payload);
     res.status(200).end();
+    slackHandleEvents(res, payload);
   }
 });
 
@@ -78,6 +79,7 @@ app.post('/slack/commands', (req, res) => {
   if (payload.command) {
     logger.debug(`POST /slack/commands: Поступили данные команды: ${payload.command}`);
     logger.trace('POST /slack/commands:', payload);
+    res.status(200).end();
     slackHandleCommands(res, payload);
   }
 });

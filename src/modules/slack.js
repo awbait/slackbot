@@ -7,7 +7,6 @@ import * as modal from './modals';
 
 dotenv.config();
 const slack = new WebClient(process.env.XOXB);
-const channelId = process.env.SLACK_CHANNEL;
 
 const channels = {
   78123854950: 'C8JCHPXAN',
@@ -51,7 +50,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
   if (isBlacklisted) {
     const incallAttBlacklist = modal.formIncallAttBlacklist(phoneFrom, phoneTo);
     slackSendMessage({
-      channel: channelId,
+      channel: channels[phoneTo],
       text: incallAttBlacklist.text,
       blocks: incallAttBlacklist.blocks,
       icon_emoji: ':no_mobile_phones:',
@@ -61,7 +60,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
     const callerName = await request.getNameCaller(phoneFrom);
     const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
     slackSendMessage({
-      channel: channelId,
+      channel: channels[phoneTo],
       text: incallAtt.text,
       blocks: incallAtt.blocks,
       icon_emoji: ':telephone_receiver:',
@@ -86,8 +85,7 @@ async function slackOpenModal(trigger, template) {
   }
 }
 
-export async function slackHandleActions(res, payload) {
-  res.status(200).end();
+export async function slackHandleActions(payload) {
   switch (payload.type) {
     case 'interactive_message':
       break;
@@ -162,7 +160,14 @@ export async function slackHandleActions(res, payload) {
               payload.actions[0].selected_option.text.text,
               payload.user.username,
             );
-            const objectArg = modal.blacklistMessageUpdate(payload.user.id, payload.message.ts, payload.channel.id, reason.comment, phones[0], phones[1]);
+            const objectArg = modal.blacklistMessageUpdate(
+              payload.user.id,
+              payload.message.ts,
+              payload.channel.id,
+              reason.comment,
+              phones[0],
+              phones[1],
+            );
             slackUpdateMessage(objectArg);
           }
           break;
@@ -181,11 +186,11 @@ export async function slackHandleActions(res, payload) {
   }
 }
 
-export function slackHandleEvents(res, payload) {
-  console.length(res, payload);
+export function slackHandleEvents(payload) {
+  console.length(payload);
 }
 
-export function slackHandleCommands(res, payload) {
+export function slackHandleCommands(payload) {
   switch (payload.command) {
     case '/searchclient': {
       const template = objectAssign(modal.searchClient, { external_id: generateId('modal_searchclient_') });
@@ -196,5 +201,4 @@ export function slackHandleCommands(res, payload) {
       logger.warn('HANDLE-COMMANDS:: Поступили данные неизвестного типа:', payload);
       break;
   }
-  res.status(200).end();
 }

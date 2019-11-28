@@ -204,14 +204,17 @@ export function searchClientList(clients, value) {
   };
   if (clientCount !== 0) {
     clients.forEach((client) => {
-      const phone = client.phones.length !== 0 ? client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number : 'Нет данных';
+      const phone = client.phones.length !== 0 ? `${formatPhoneNumber(client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number, true)}` : 'Нет данных';
       const email = client.emails.length !== 0 ? client.emails.find((emailVal) => emailVal.is_main === true).address : 'Нет данных';
-      // TODO: Проверка is_company для полного отображения имени компании/человека
+      let clientName = client.first_name;
+      if (!client.is_company) {
+        clientName = `${client.first_name} ${client.last_name} ${client.middle_name}`;
+      }
       const section = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*<${this.frontUrl}/#/clients/${client.id}|${client.first_name}>*\n:telephone_receiver: Телефон: *+${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*\n:office: Адрес: *Тест*`,
+          text: `*<${this.frontUrl}/#/clients/${client.id}|${clientName}>*\n:telephone_receiver: Телефон: *${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*\n:office: Адрес: *Тест*`,
         },
       };
 
