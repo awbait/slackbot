@@ -348,3 +348,10 @@ export function blacklistMessageUpdate(userId, timestamp, channel, reason, phone
   return objectArg;
 }
 
+export function testModal() {
+  const template = {
+    
+  }
+  
+  return template;
+}
