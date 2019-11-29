@@ -173,6 +173,8 @@ export async function slackHandleActions(payload) {
           }
           break;
         case 'status_change':
+          const temp = modal.testModal();
+          slackOpenModal()
           console.log(payload.message.blocks);
           break;
         default:

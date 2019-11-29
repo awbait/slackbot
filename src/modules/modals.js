@@ -350,8 +350,100 @@ export function blacklistMessageUpdate(userId, timestamp, channel, reason, phone
 
 export function testModal() {
   const template = {
-    
-  }
+	"type": "modal",
+	"title": {
+		"type": "plain_text",
+		"text": "Добавить комментарий",
+		"emoji": true
+	},
+	"submit": {
+		"type": "plain_text",
+		"text": "Submit",
+		"emoji": true
+	},
+	"close": {
+		"type": "plain_text",
+		"text": "Cancel",
+		"emoji": true
+	},
+	"blocks": [
+		{
+			"type": "input",
+			"label": {
+				"type": "plain_text",
+				"text": "Комментарий",
+				"emoji": true
+			},
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+                "placeholder": {
+					"type": "plain_text",
+					"text": "Введите комментарий",
+					"emoji": true
+				}
+			}
+		},
+        		{
+			"type": "input",
+			"label": {
+				"type": "plain_text",
+				"text": "Статус звонка",
+				"emoji": true
+			},
+			"element": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Выберите статус",
+					"emoji": true
+				},
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": ":hammer_and_pick: В работе",
+							"emoji": true
+						},
+						"value": "value-1"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": ":question: Недостаточно информации",
+							"emoji": true
+						},
+						"value": "value-2"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": ":heavy_check_mark: Решена",
+							"emoji": true
+						},
+						"value": "value-3"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": ":recycle: Обрабатывается",
+							"emoji": true
+						},
+						"value": "value-4"
+					},
+                    {
+						"text": {
+							"type": "plain_text",
+							"text": ":lock: Закрыта",
+							"emoji": true
+						},
+						"value": "value-0"
+					}
+				]
+			}
+		}
+	]
+}
   
   return template;
 }
