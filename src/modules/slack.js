@@ -204,7 +204,8 @@ export function slackHandleCommands(payload) {
 }
 
 function testSendMsg() {
-  const blocks = [
+  const blocks = {
+    blocks: [
     {
       type: 'section',
       text: {
@@ -247,13 +248,14 @@ function testSendMsg() {
         },
       ],
     },
-  ];
+  ]
+  };
 
 
   slackSendMessage({
     channel: 'CQ957CR8X',
     text: 'Уведомление',
-    blocks,
+    blocks: blocks.blocks,
     icon_emoji: ':telephone_receiver:',
   });
 }
