@@ -365,7 +365,7 @@ export function blacklistMessageUpdate(
   return objectArg;
 }
 
-export function testModal(message) {
+export function notifyAddStatus(message) {
   const template = {
     type: "modal",
     title: {
@@ -489,9 +489,10 @@ export function notifyUpdateStatus(channel, timestamp, message, status, comment)
         },
         "accessory": {
           "type": "button",
+          action_id: "status_edit",
           "text": {
             "type": "plain_text",
-            "text": "Button",
+            "text": "Изменить статус",
             "emoji": true
           },
           "value": "click_me_123"
