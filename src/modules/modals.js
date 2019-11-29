@@ -487,50 +487,22 @@ export function notifyUpdateStatus(channel, timestamp, message, status, comment)
           type: "mrkdwn",
           text: message,
         },
-        accessory: {
-          type: "overflow",
-          options: [
-            {
-              text: {
-                type: "plain_text",
-                text: "Option 1",
-                emoji: true
-              },
-              value: "value-0"
-            },
-            {
-              text: {
-                type: "plain_text",
-                text: "Option 2",
-                emoji: true
-              },
-              value: "value-1"
-            },
-            {
-              text: {
-                type: "plain_text",
-                text: "Option 3",
-                emoji: true
-              },
-              value: "value-2"
-            },
-            {
-              text: {
-                type: "plain_text",
-                text: "Option 4",
-                emoji: true
-              },
-              value: "value-3"
-            }
-          ]
-        }
+        "accessory": {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Button",
+            "emoji": true
+          },
+          "value": "click_me_123"
+			  }
       },
       {
         type: "context",
         elements: [
           {
             type: "mrkdwn",
-            text: `${statusText} `
+            text: `${statusText} ${commentText}`
           }
         ]
       }
