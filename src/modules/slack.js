@@ -123,7 +123,7 @@ export async function slackHandleActions(payload) {
           break;
         }
         case 'notifycomment': {
-          console.log()
+          console.log(payload.view.blocks)
           console.log(payload.view.state.values);
           break;
         }

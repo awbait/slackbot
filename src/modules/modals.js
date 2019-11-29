@@ -389,9 +389,18 @@ export function testModal(message) {
         text: {
           type: "mrkdwn",
           text: message
+        }
+      },
+      {
+        type: "input",
+        label: {
+          type: "plain_text",
+          text: "Установить статус",
+          emoji: true
         },
-        accessory: {
+        element: {
           type: "static_select",
+          
           placeholder: {
             type: "plain_text",
             text: "Выберите статус",
@@ -443,6 +452,7 @@ export function testModal(message) {
       },
       {
         type: "input",
+        block_id: "notify_comment",
         optional: true,
         label: {
           type: "plain_text",
@@ -451,6 +461,7 @@ export function testModal(message) {
         },
         element: {
           type: "plain_text_input",
+          action_id: "comment",
           multiline: true,
           placeholder: {
             type: "plain_text",
