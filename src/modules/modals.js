@@ -478,6 +478,8 @@ export function testModal(message) {
 }
 
 export function notifyUpdateStatus(channel, timestamp, message, status, comment) {
+  const statusText = `:information_source: *Статус:* ${status}\n`;
+  const commentText = comment ? `:memo: *Комментарий:* ${comment}` : '';
   const blocks = [
       {
         type: "section",
@@ -528,7 +530,7 @@ export function notifyUpdateStatus(channel, timestamp, message, status, comment)
         elements: [
           {
             type: "mrkdwn",
-            text: `:information_source: *Статус:* ${status}\n :memo: *Комментарий:* ${comment}`
+            text: `${statusText} `
           }
         ]
       }

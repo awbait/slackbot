@@ -123,14 +123,14 @@ export async function slackHandleActions(payload) {
           break;
         }
         case 'notifychange': {
-          const ts = payload.view.private_metadata;
+          const metadata = stringToArr(payload.view.private_metadata);
           const message = payload.view.blocks[0].text.text;
-          const status = payload.view.state.values.notify_status.status.selected_option.value;
+          const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
           
           const objectArg = modal.notifyUpdateStatus(
-            channel,
-            ts,
+            metadata[0],
+            metadata[1],
             message,
             status,
             comment,
@@ -191,7 +191,7 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change':
           const notifyMsg = payload.message.blocks[0].text.text
-          const temp = objectAssign(modal.testModal(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.message.ts}` });
+          const temp = objectAssign(modal.testModal(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         default:
