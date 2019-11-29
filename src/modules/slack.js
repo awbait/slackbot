@@ -122,7 +122,11 @@ export async function slackHandleActions(payload) {
           slackOpenModal(payload.trigger_id, template);
           break;
         }
-        case 'notifycomment': {
+        case 'notifychange': {
+          const ts = payload.view.private_metadata;
+          const firstBlockText = payload.view.blocks[0].text.text;
+          const status = payload.view.state.values.notify_status.status.selected_option.value;
+          const comment = payload.
           console.log(payload.view.blocks)
           console.log(payload.view.state.values);
           break;
@@ -180,7 +184,7 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change':
           const notifyMsg = payload.message.blocks[0].text.text
-          const temp = objectAssign(modal.testModal(notifyMsg), { external_id: generateId('modal_notifycomment_') });
+          const temp = objectAssign(modal.testModal(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         default:

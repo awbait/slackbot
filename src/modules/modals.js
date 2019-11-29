@@ -393,6 +393,7 @@ export function testModal(message) {
       },
       {
         type: "input",
+        block_id: "notify_status",
         label: {
           type: "plain_text",
           text: "Установить статус",
@@ -400,7 +401,7 @@ export function testModal(message) {
         },
         element: {
           type: "static_select",
-          
+          action_id: "status",
           placeholder: {
             type: "plain_text",
             text: "Выберите статус",
