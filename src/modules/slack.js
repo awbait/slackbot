@@ -174,7 +174,7 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change':
           const temp = modal.testModal();
-          slackOpenModal()
+          slackOpenModal(payload.trigger_id, temp);
           console.log(payload.message.blocks);
           break;
         default:

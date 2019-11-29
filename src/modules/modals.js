@@ -358,37 +358,20 @@ export function testModal() {
 	},
 	"submit": {
 		"type": "plain_text",
-		"text": "Submit",
+		"text": "Добавить",
 		"emoji": true
 	},
 	"close": {
 		"type": "plain_text",
-		"text": "Cancel",
+		"text": "Отмена",
 		"emoji": true
 	},
 	"blocks": [
-		{
-			"type": "input",
-			"label": {
-				"type": "plain_text",
-				"text": "Комментарий",
-				"emoji": true
-			},
-			"element": {
-				"type": "plain_text_input",
-				"multiline": true,
-                "placeholder": {
-					"type": "plain_text",
-					"text": "Введите комментарий",
-					"emoji": true
-				}
-			}
-		},
         		{
 			"type": "input",
 			"label": {
 				"type": "plain_text",
-				"text": "Статус звонка",
+				"text": "Статус",
 				"emoji": true
 			},
 			"element": {
@@ -440,6 +423,24 @@ export function testModal() {
 						"value": "value-0"
 					}
 				]
+			}
+		},
+    {
+			"type": "input",
+      "optional": true,
+			"label": {
+				"type": "plain_text",
+				"text": "Комментарий",
+				"emoji": true
+			},
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+                "placeholder": {
+					"type": "plain_text",
+					"text": "Введите комментарий",
+					"emoji": true
+				}
 			}
 		}
 	]
