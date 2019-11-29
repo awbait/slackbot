@@ -173,7 +173,7 @@ export async function slackHandleActions(payload) {
           }
           break;
         case 'status_change':
-          console.log(payload);
+          console.log(payload.message.blocks);
           break;
         default:
           logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
