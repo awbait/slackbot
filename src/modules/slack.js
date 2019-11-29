@@ -222,28 +222,11 @@ function testSendMsg() {
           text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
         },
       },
-      {
-      type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: '<@UQ6R6BJ92> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
-        },
-      },
       
     {
       type: 'actions',
       elements: [
-        {
-          type: 'button',
-          action_id: 'blacklist_add',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Добавить в ЧС',
-          },
-          style: 'danger',
-          value: '12312312/3/12/3/123',
-        },
+        
         {
           type: 'button',
           action_id: 'status_change',
@@ -254,6 +237,17 @@ function testSendMsg() {
           },
           style: 'primary',
           value: '123123',
+        },
+        {
+          type: 'button',
+          action_id: 'blacklist_add',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Добавить в ЧС',
+          },
+          style: 'danger',
+          value: '12312312/3/12/3/123',
         },
       ],
     },
