@@ -476,3 +476,67 @@ export function testModal(message) {
 
   return template;
 }
+
+export function notifyUpdateStatus(channel, timestamp, message, status, comment) {
+  const blocks = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: message,
+        },
+        accessory: {
+          type: "overflow",
+          options: [
+            {
+              text: {
+                type: "plain_text",
+                text: "Option 1",
+                emoji: true
+              },
+              value: "value-0"
+            },
+            {
+              text: {
+                type: "plain_text",
+                text: "Option 2",
+                emoji: true
+              },
+              value: "value-1"
+            },
+            {
+              text: {
+                type: "plain_text",
+                text: "Option 3",
+                emoji: true
+              },
+              value: "value-2"
+            },
+            {
+              text: {
+                type: "plain_text",
+                text: "Option 4",
+                emoji: true
+              },
+              value: "value-3"
+            }
+          ]
+        }
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `:information_source: *Статус:* ${status}\n :memo: *Комментарий:* ${comment}`
+          }
+        ]
+      }
+    ];
+  const objectArg = {
+    channel,
+    ts: timestamp,
+    blocks
+  };
+  return objectArg;
+}
