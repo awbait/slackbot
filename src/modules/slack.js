@@ -250,12 +250,32 @@ function testSendMsg() {
     },
   ]
   };
+  
+  const template = {
+    text: '1231231',
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
+        },
+      },
+      {
+      type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '<@DPZBVMBH7> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
+        },
+      },
+    ],
+  };
 
 
   slackSendMessage({
     channel: 'CQ957CR8X',
-    text: 'Уведомление',
-    blocks: blocks.blocks,
+    text: template.text,
+    blocks: template.blocks,
     icon_emoji: ':telephone_receiver:',
   });
 }
