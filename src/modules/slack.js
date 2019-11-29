@@ -173,9 +173,10 @@ export async function slackHandleActions(payload) {
           }
           break;
         case 'status_change':
-          const temp = modal.testModal();
+          const notifyMsg = payload.message.blocks[0].text.text
+          const temp = modal.testModal(notifyMsg);
           slackOpenModal(payload.trigger_id, temp);
-          console.log(payload.message.blocks);
+          console.log(notifyMsg);
           break;
         default:
           logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
@@ -210,58 +211,12 @@ export function slackHandleCommands(payload) {
 }
 
 function testSendMsg() {
-  const blocks = {
-    blocks: [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
-        emoji: true,
-      },
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '<@UQ6R6BJ92> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
-      },
-    },
-    {
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          action_id: 'blacklist_add',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Добавить в ЧС',
-          },
-          style: 'danger',
-          value: '12312312/3/12/3/123',
-        },
-        {
-          type: 'button',
-          action_id: 'status_change',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Комментарий',
-          },
-          style: 'primary',
-          value: '123123',
-        },
-      ],
-    },
-  ]
-  };
-  
   const template = {
     text: 'ЧТООООО????',
     blocks: [
       {
         type: 'section',
+        block_id: 'notify_text',
         text: {
           type: 'mrkdwn',
           text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
