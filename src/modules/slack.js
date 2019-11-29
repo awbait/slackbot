@@ -133,6 +133,7 @@ export async function slackHandleActions(payload) {
         Зарезервированые значения:
         - blacklist_add (Кнопка "Добавить в ЧС")
         - blacklsit_reasons (Выбранная причина в селекте)
+        - comment_add
       */
       switch (payload.actions[0].action_id) {
         case 'blacklist_add': {
@@ -171,6 +172,9 @@ export async function slackHandleActions(payload) {
             slackUpdateMessage(objectArg);
           }
           break;
+        case 'comment_add': {
+          console.log(payload);
+        }
         default:
           logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
           break;
@@ -268,6 +272,34 @@ function testSendMsg() {
           text: '<@DPZBVMBH7> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
         },
       },
+      
+    {
+      type: 'actions',
+      elements: [
+        {
+          type: 'button',
+          action_id: 'blacklist_add',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Добавить в ЧС',
+          },
+          style: 'danger',
+          value: '12312312/3/12/3/123',
+        },
+        {
+          type: 'button',
+          action_id: 'status_change',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Комментарий',
+          },
+          style: 'primary',
+          value: '123123',
+        },
+      ],
+    },
     ],
   };
 
