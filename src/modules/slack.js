@@ -10,7 +10,8 @@ const slack = new WebClient(process.env.XOXB);
 
 const channels = {
   78123854950: 'C8JCHPXAN',
-  78126123520: 'CDH9N4QNL',
+  78126123520: 'GCPSTLV0T',
+  78124169120: 'CDH9N4QNL',
 };
 
 /**
@@ -121,6 +122,11 @@ export async function slackHandleActions(payload) {
           slackOpenModal(payload.trigger_id, template);
           break;
         }
+        case 'notifycomment': {
+          console.log()
+          console.log(payload.view.state.values);
+          break;
+        }
         default:
           logger.warn(`HANDLE-ACTION: view_submission:: Поступили данные неизвестного типа: ${id}`, payload);
           break;
@@ -174,9 +180,8 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change':
           const notifyMsg = payload.message.blocks[0].text.text
-          const temp = modal.testModal(notifyMsg);
+          const temp = objectAssign(modal.testModal(notifyMsg), { external_id: generateId('modal_notifycomment_') });
           slackOpenModal(payload.trigger_id, temp);
-          console.log(notifyMsg);
           break;
         default:
           logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
