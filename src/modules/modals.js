@@ -471,7 +471,7 @@ export function notifyAddStatus(message) {
         element: {
           type: "plain_text_input",
           action_id: "comment",
-          initial_value: "Тут будет подгружаться комментарий который уже был добавлен."
+          initial_value: "Если комментарий уже был добавлен, подгрузим его. (с) скоро",
           multiline: true,
           placeholder: {
             type: "plain_text",
