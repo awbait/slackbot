@@ -448,7 +448,15 @@ export function notifyAddStatus(message) {
               },
               value: "value-0"
             }
-          ]
+          ],
+				"initial_option": {
+					"text": {
+						"type": "plain_text",
+						"text": ":hammer_and_pick: В работе",
+						"emoji": true
+					},
+					"value": "value-1"
+				}
         }
       },
       {
@@ -463,6 +471,7 @@ export function notifyAddStatus(message) {
         element: {
           type: "plain_text_input",
           action_id: "comment",
+          initial_value: "Тут будет подгружаться комментарий который уже был добавлен."
           multiline: true,
           placeholder: {
             type: "plain_text",

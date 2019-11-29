@@ -200,6 +200,7 @@ export async function slackHandleActions(payload) {
           const temp = objectAssign(modal.notifyAddStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           console.log(notifyMsg);
           console.log(notifyStatus);
+          slackOpenModal(payload.trigger_id, temp);
           break;
         }
         default:
