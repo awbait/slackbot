@@ -172,9 +172,9 @@ export async function slackHandleActions(payload) {
             slackUpdateMessage(objectArg);
           }
           break;
-        case 'comment_add': {
+        case 'status_change':
           console.log(payload);
-        }
+          break;
         default:
           logger.warn('HANDLE-ACTION: block_actions:: Поступили данные неизвестного типа', payload);
           break;
@@ -222,7 +222,7 @@ function testSendMsg() {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: '<@DR2V6T93R> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
+        text: '<@UQ6R6BJ92> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
       },
     },
     {
@@ -256,7 +256,7 @@ function testSendMsg() {
   };
   
   const template = {
-    text: '1231231',
+    text: 'ЧТООООО????',
     blocks: [
       {
         type: 'section',
@@ -269,7 +269,7 @@ function testSendMsg() {
       type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '<@DPZBVMBH7> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
+          text: '<@UQ6R6BJ92> установил статус: :hammer_and_pick: *В работе*\nКомментарий: :page_facing_up: Хреновину нужно починить',
         },
       },
       
