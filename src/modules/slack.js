@@ -126,9 +126,17 @@ export async function slackHandleActions(payload) {
           const ts = payload.view.private_metadata;
           const firstBlockText = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.value;
-          const comment = payload.
-          console.log(payload.view.blocks)
-          console.log(payload.view.state.values);
+          const comment = payload.view.state.values.notify_comment.comment.value;
+          
+          const objectArg = modal.blacklistMessageUpdate(
+            payload.user.id,
+            metadata[3],
+            channel,
+            reason.comment,
+            metadata[0],
+            metadata[1],
+          );
+          slackUpdateMessage(objectArg);
           break;
         }
         default:
