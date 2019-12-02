@@ -366,10 +366,12 @@ export function blacklistMessageUpdate(
 }
 
 export function notifyAddStatus(message, currentMsgStatus) {
-  let initialStatus = '';
-  let initialCumment = '';
+  let initialStatus = "";
+  let initialComment = "";
   if (currentMsgStatus) {
-    initialStatus = currentMsgStatus.split(':* ')[]
+    const temp = currentMsgStatus.split(":* ");
+    initialStatus = temp[1] ? temp[1].split(" :memo:")[0] : '';
+    initialComment = temp[2];
   }
   const template = {
     type: "modal",
@@ -454,14 +456,14 @@ export function notifyAddStatus(message, currentMsgStatus) {
               value: "value-0"
             }
           ],
-				"initial_option": {
-					"text": {
-						"type": "plain_text",
-						"text": ":hammer_and_pick: В работе",
-						"emoji": true
-					},
-					"value": "value-1"
-				}
+          initial_option: {
+            text: {
+              type: "plain_text",
+              text: ":hammer_and_pick: В работе",
+              emoji: true
+            },
+            value: "value-1"
+          }
         }
       },
       {
@@ -476,7 +478,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
         element: {
           type: "plain_text_input",
           action_id: "comment",
-          initial_value: "Если комментарий уже был добавлен, подгрузим его. (с) скоро",
+          initial_value: `${initialComment}`,
           multiline: true,
           placeholder: {
             type: "plain_text",
@@ -491,37 +493,43 @@ export function notifyAddStatus(message, currentMsgStatus) {
   return template;
 }
 
-export function notifyUpdateStatus(channel, timestamp, message, status, comment) {
+export function notifyUpdateStatus(
+  channel,
+  timestamp,
+  message,
+  status,
+  comment
+) {
   const statusText = `:information_source: *Статус:* ${status}\n`;
-  const commentText = comment ? `:memo: *Комментарий:* ${comment}` : '';
+  const commentText = comment ? `:memo: *Комментарий:* ${comment}` : "";
   const blocks = [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: message,
-        },
-        "accessory": {
-          "type": "button",
-          action_id: "status_edit",
-          "text": {
-            "type": "plain_text",
-            "text": "Изменить статус",
-            "emoji": true
-          },
-          "value": "click_me_123"
-			  }
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: message
       },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: `${statusText} ${commentText}`
-          }
-        ]
+      accessory: {
+        type: "button",
+        action_id: "status_edit",
+        text: {
+          type: "plain_text",
+          text: "Изменить статус",
+          emoji: true
+        },
+        value: "click_me_123"
       }
-    ];
+    },
+    {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `${statusText} ${commentText}`
+        }
+      ]
+    }
+  ];
   const objectArg = {
     channel,
     ts: timestamp,
