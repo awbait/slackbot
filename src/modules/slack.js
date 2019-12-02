@@ -127,7 +127,6 @@ export async function slackHandleActions(payload) {
           const message = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
-          
           const objectArg = modal.notifyUpdateStatus(
             metadata[0],
             metadata[1],
@@ -189,11 +188,12 @@ export async function slackHandleActions(payload) {
             slackUpdateMessage(objectArg);
           }
           break;
-        case 'status_change':
+        case 'status_change': {
           const notifyMsg = payload.message.blocks[0].text.text;
           const temp = objectAssign(modal.notifyAddStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
+        }
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
           const notifyCurrentStatus = payload.message.blocks[1].elements[0].text;
@@ -245,35 +245,35 @@ function testSendMsg() {
           text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
         },
       },
-      
-    {
-      type: 'actions',
-      elements: [
-        
-        {
-          type: 'button',
-          action_id: 'status_change',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Комментарий',
+
+      {
+        type: 'actions',
+        elements: [
+
+          {
+            type: 'button',
+            action_id: 'status_change',
+            text: {
+              type: 'plain_text',
+              emoji: true,
+              text: 'Комментарий',
+            },
+            style: 'primary',
+            value: '123123',
           },
-          style: 'primary',
-          value: '123123',
-        },
-        {
-          type: 'button',
-          action_id: 'blacklist_add',
-          text: {
-            type: 'plain_text',
-            emoji: true,
-            text: 'Добавить в ЧС',
+          {
+            type: 'button',
+            action_id: 'blacklist_add',
+            text: {
+              type: 'plain_text',
+              emoji: true,
+              text: 'Добавить в ЧС',
+            },
+            style: 'danger',
+            value: '12312312/3/12/3/123',
           },
-          style: 'danger',
-          value: '12312312/3/12/3/123',
-        },
-      ],
-    },
+        ],
+      },
     ],
   };
 
@@ -285,4 +285,3 @@ function testSendMsg() {
     icon_emoji: ':telephone_receiver:',
   });
 }
-testSendMsg();

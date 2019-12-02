@@ -10,11 +10,11 @@ const handler = async (context) => {
     .onEvent('variables')
     .then((vars) => {
       const phones = {
-        'ivr-4169120': '78126123520',
-        '3854950day': '78123854950', // Исправить ivr
+        'ivr-4169120': '78124169120',
+        'ivr-3854950': '78123854950',
+        'ivr-6123520': '78126123520',
       };
-      let callerTo = phones[vars.agi_context];
-      callerTo = '78123854950'; // FIXME: Перед релизом новой версии убрать
+      const callerTo = phones[vars.agi_context];
       sendCallerNotify(vars.agi_callerid, callerTo);
       logger.trace('ASTERISK: Поступил входящий вызов::', vars);
     })
