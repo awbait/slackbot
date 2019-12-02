@@ -382,6 +382,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
     initialComment = temp[2];
     if (!initialComment) {
       initialComment = "";
+      initialStatus = initialStatus.split('\n ')[0];
     }
     initialStatusObject = {
       initial_option: {
@@ -393,6 +394,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
         value: statuses[initialStatus]
       }
     };
+    console.log(initialStatusObject);
   }
   let template = {
     type: "modal",
@@ -477,14 +479,6 @@ export function notifyAddStatus(message, currentMsgStatus) {
               value: "value-5"
             }
           ],
-          initial_option: {
-            text: {
-              type: 'plain_text',
-              text: ':hammer_and_pick: В работе',
-              emoji: true,
-            },
-            value: 'value-1',
-          },
         }
       },
       {
