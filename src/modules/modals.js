@@ -365,7 +365,12 @@ export function blacklistMessageUpdate(
   return objectArg;
 }
 
-export function notifyAddStatus(message) {
+export function notifyAddStatus(message, currentMsgStatus) {
+  let initialStatus = '';
+  let initialCumment = '';
+  if (currentMsgStatus) {
+    initialStatus = currentMsgStatus.split(':* ')[]
+  }
   const template = {
     type: "modal",
     title: {

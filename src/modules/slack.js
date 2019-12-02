@@ -196,10 +196,8 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const notifyStatus = payload.message.blocks[1].elements[0].text;
-          const temp = objectAssign(modal.notifyAddStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
-          console.log(notifyMsg);
-          console.log(notifyStatus);
+          const notifyCurrentStatus = payload.message.blocks[1].elements[0].text;
+          const temp = objectAssign(modal.notifyAddStatus(notifyMsg, notifyCurrentStatus), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
