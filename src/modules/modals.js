@@ -375,14 +375,16 @@ export function notifyAddStatus(message, currentMsgStatus) {
   }
   let initialStatus = ":hammer_and_pick: В работе";
   let initialComment = "";
+  console.log(statuses[initialStatus])
   if (currentMsgStatus) {
     const temp = currentMsgStatus.split(":* ");
     initialStatus = temp[1].split(" :memo:")[0];
+    
     initialComment = temp[2];
     if (!initialComment) {
       initialComment = '';
     }
-    console.log(initialStatus, statuses[`${initialStatus}`]);
+    console.log(statuses[String(initialStatus)]);
   }
   const template = {
     type: "modal",
