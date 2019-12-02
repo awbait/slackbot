@@ -394,7 +394,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
       }
     };
   }
-  const template = {
+  let template = {
     type: "modal",
     title: {
       type: "plain_text",
@@ -476,7 +476,15 @@ export function notifyAddStatus(message, currentMsgStatus) {
               },
               value: "value-5"
             }
-          ]
+          ],
+          initial_option: {
+            text: {
+              type: 'plain_text',
+              text: ':hammer_and_pick: В работе',
+              emoji: true,
+            },
+            value: 'value-1',
+          },
         }
       },
       {
@@ -504,10 +512,10 @@ export function notifyAddStatus(message, currentMsgStatus) {
   };
   
   if (currentMsgStatus) {
-    templateQ = objectAssign(template.blocks[1].element, initialStatusObject)
+    const element = objectAssign(template.blocks[1].element, initialStatusObject);
+    template.blocks[1].element = element;
   }
-
-  return templateQ;
+  return template;
 }
 
 export function notifyUpdateStatus(
