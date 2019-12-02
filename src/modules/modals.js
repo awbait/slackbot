@@ -370,8 +370,11 @@ export function notifyAddStatus(message, currentMsgStatus) {
   let initialComment = "";
   if (currentMsgStatus) {
     const temp = currentMsgStatus.split(":* ");
-    initialStatus = temp[1] ? temp[1].split(" :memo:")[0] : '';
+    initialStatus = temp[1].split(" :memo:")[0];
     initialComment = temp[2];
+    if (!initialComment) {
+      initialComment = '';
+    }
   }
   const template = {
     type: "modal",
