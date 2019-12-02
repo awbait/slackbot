@@ -366,7 +366,14 @@ export function blacklistMessageUpdate(
 }
 
 export function notifyAddStatus(message, currentMsgStatus) {
-  let initialStatus = "";
+  const statuses = {
+    ':hammer_and_pick: В работе': 'value-1',
+    ':question: Недостаточно информации': 'value-2',
+    ':heavy_check_mark: Решена': 'value-3',
+    ":recycle: Обрабатывается": 'value-4',
+    ':lock: Закрыта': 'value-5',
+  }
+  let initialStatus = ":hammer_and_pick: В работе";
   let initialComment = "";
   if (currentMsgStatus) {
     const temp = currentMsgStatus.split(":* ");
@@ -375,6 +382,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
     if (!initialComment) {
       initialComment = '';
     }
+    console.log(initialStatus, statuses[`${initialStatus}`]);
   }
   const template = {
     type: "modal",
@@ -456,16 +464,16 @@ export function notifyAddStatus(message, currentMsgStatus) {
                 text: ":lock: Закрыта",
                 emoji: true
               },
-              value: "value-0"
+              value: "value-5"
             }
           ],
           initial_option: {
             text: {
               type: "plain_text",
-              text: ":hammer_and_pick: В работе",
+              text: initialStatus,
               emoji: true
             },
-            value: "value-1"
+            value: statuses[initialStatus],
           }
         }
       },
