@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { formatPhoneNumber } from "./utils";
+import { formatPhoneNumber, objectAssign } from "./utils";
 
 dotenv.config();
 const frontUrl = process.env.FRONT_URL;
@@ -367,24 +367,32 @@ export function blacklistMessageUpdate(
 
 export function notifyAddStatus(message, currentMsgStatus) {
   const statuses = {
-    ':hammer_and_pick: В работе': 'value-1',
-    ':question: Недостаточно информации': 'value-2',
-    ':heavy_check_mark: Решена': 'value-3',
-    ":recycle: Обрабатывается": 'value-4',
-    ':lock: Закрыта': 'value-5',
-  }
-  let initialStatus = ":hammer_and_pick: В работе";
+    ":hammer_and_pick: В работе": "value-1",
+    ":question: Недостаточно информации": "value-2",
+    ":heavy_check_mark: Решена": "value-3",
+    ":recycle: Обрабатывается": "value-4",
+    ":lock: Закрыта": "value-5"
+  };
+  let initialStatus = "";
   let initialComment = "";
-  console.log(statuses[initialStatus])
+  let initialStatusObject;
   if (currentMsgStatus) {
     const temp = currentMsgStatus.split(":* ");
-    initialStatus = temp[1].split(" :memo:")[0];
-    
+    initialStatus = temp[1].split("\n :memo:")[0];
     initialComment = temp[2];
     if (!initialComment) {
-      initialComment = '';
+      initialComment = "";
     }
-    console.log(statuses[String(initialStatus)]);
+    initialStatusObject = {
+      initial_option: {
+        text: {
+          type: "plain_text",
+          text: initialStatus,
+          emoji: true
+        },
+        value: statuses[initialStatus]
+      }
+    };
   }
   const template = {
     type: "modal",
@@ -468,15 +476,7 @@ export function notifyAddStatus(message, currentMsgStatus) {
               },
               value: "value-5"
             }
-          ],
-          initial_option: {
-            text: {
-              type: "plain_text",
-              text: initialStatus,
-              emoji: true
-            },
-            value: statuses[initialStatus],
-          }
+          ]
         }
       },
       {
@@ -502,8 +502,12 @@ export function notifyAddStatus(message, currentMsgStatus) {
       }
     ]
   };
+  
+  if (currentMsgStatus) {
+    templateQ = objectAssign(template.blocks[1].element, initialStatusObject)
+  }
 
-  return template;
+  return templateQ;
 }
 
 export function notifyUpdateStatus(
