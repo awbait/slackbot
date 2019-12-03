@@ -366,7 +366,7 @@ export function blacklistMessageUpdate(
   return objectArg;
 }
 
-export function notifyAddStatus(message, currentMsgStatus) {
+export function notifyUpdateStatus(message, currentMsgInfo) {
   const statuses = {
     ':hammer_and_pick: В работе': 'value-1',
     ':question: Недостаточно информации': 'value-2',
@@ -377,13 +377,10 @@ export function notifyAddStatus(message, currentMsgStatus) {
   let initialStatus = '';
   let initialComment = '';
   let initialStatusObject;
-  if (currentMsgStatus) {
-    const temp = currentMsgStatus.split(':* ');
-    initialStatus = temp[1].split('\n :memo:')[0];
-    initialComment = temp[2];
-    if (!initialComment) {
-      initialComment = '';
-      initialStatus = initialStatus.split('\n ')[0];
+  if (currentMsgInfo) {
+    initialStatus = currentMsgInfo[0].text.replace(':information_source: *Статус:* ', '');
+    if (currentMsgInfo.length >= 3) {
+      initialComment = currentMsgInfo[1].text.replace(':memo: *Комментарий:* ', '');
     }
     initialStatusObject = {
       initial_option: {
@@ -395,7 +392,6 @@ export function notifyAddStatus(message, currentMsgStatus) {
         value: statuses[initialStatus],
       },
     };
-    console.log(initialStatusObject);
   }
   const template = {
     type: 'modal',
@@ -506,22 +502,16 @@ export function notifyAddStatus(message, currentMsgStatus) {
     ],
   };
 
-  if (currentMsgStatus) {
+  if (currentMsgInfo) {
     const element = objectAssign(template.blocks[1].element, initialStatusObject);
     template.blocks[1].element = element;
   }
   return template;
 }
 
-export function notifyUpdateStatus(
-  channel,
-  timestamp,
-  message,
-  status,
-  comment,
-) {
-  const statusText = `:information_source: *Статус:* ${status}\n`;
-  const commentText = comment ? `:memo: *Комментарий:* ${comment}` : '';
+export function notifyAddStatus(channel, timestamp, message, status, comment, user) {
+  const statusText = `:information_source: *Статус:* ${status}`;
+  const userText = `:male-office-worker: *Изменил(а)* <@${user}>`;
   const blocks = [
     {
       type: 'section',
@@ -545,11 +535,26 @@ export function notifyUpdateStatus(
       elements: [
         {
           type: 'mrkdwn',
-          text: `${statusText} ${commentText}`,
+          text: `${statusText}`,
+        },
+        {
+          type: 'mrkdwn',
+          text: `${userText}`,
         },
       ],
     },
   ];
+
+  if (comment) {
+    const commentText = `:memo: *Комментарий:* ${comment}`;
+    const commentObj = {
+      type: 'mrkdwn',
+      text: `${commentText}`,
+    };
+    const author = blocks[1].elements.pop();
+    blocks[1].elements.push(commentObj, author);
+  }
+
   const objectArg = {
     channel,
     ts: timestamp,

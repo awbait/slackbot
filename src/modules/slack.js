@@ -127,12 +127,14 @@ export async function slackHandleActions(payload) {
           const message = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
-          const objectArg = modal.notifyUpdateStatus(
+          const author = payload.user.id;
+          const objectArg = modal.notifyAddStatus(
             metadata[0],
             metadata[1],
             message,
             status,
             comment,
+            author,
           );
           slackUpdateMessage(objectArg);
           break;
@@ -190,14 +192,14 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const temp = objectAssign(modal.notifyAddStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const notifyCurrentStatus = payload.message.blocks[1].elements[0].text;
-          const temp = objectAssign(modal.notifyAddStatus(notifyMsg, notifyCurrentStatus), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
+          const notifyCurrentInfo = payload.message.blocks[1].elements;
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
@@ -231,57 +233,4 @@ export function slackHandleCommands(payload) {
       logger.warn('HANDLE-COMMANDS:: Поступили данные неизвестного типа:', payload);
       break;
   }
-}
-
-function testSendMsg() {
-  const template = {
-    text: 'ЧТООООО????',
-    blocks: [
-      {
-        type: 'section',
-        block_id: 'notify_text',
-        text: {
-          type: 'mrkdwn',
-          text: 'Коллеги, входящий звонок на 123123123123!\nЗвонят с номера: 123123123',
-        },
-      },
-
-      {
-        type: 'actions',
-        elements: [
-
-          {
-            type: 'button',
-            action_id: 'status_change',
-            text: {
-              type: 'plain_text',
-              emoji: true,
-              text: 'Комментарий',
-            },
-            style: 'primary',
-            value: '123123',
-          },
-          {
-            type: 'button',
-            action_id: 'blacklist_add',
-            text: {
-              type: 'plain_text',
-              emoji: true,
-              text: 'Добавить в ЧС',
-            },
-            style: 'danger',
-            value: '12312312/3/12/3/123',
-          },
-        ],
-      },
-    ],
-  };
-
-
-  slackSendMessage({
-    channel: 'CQ957CR8X',
-    text: template.text,
-    blocks: template.blocks,
-    icon_emoji: ':telephone_receiver:',
-  });
 }
