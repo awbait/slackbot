@@ -70,7 +70,7 @@ app.post('/slack/events', (req, res) => {
     logger.debug(`POST /slack/events: Поступили данные типа: ${payload.event.type}`);
     logger.trace('POST /slack/events:', payload);
     res.status(200).end();
-    slackHandleEvents(res, payload);
+    slackHandleEvents(payload);
   }
 });
 
@@ -80,6 +80,6 @@ app.post('/slack/commands', (req, res) => {
     logger.debug(`POST /slack/commands: Поступили данные команды: ${payload.command}`);
     logger.trace('POST /slack/commands:', payload);
     res.status(200).end();
-    slackHandleCommands(res, payload);
+    slackHandleCommands(payload);
   }
 });

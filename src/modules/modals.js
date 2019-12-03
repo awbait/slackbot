@@ -187,17 +187,12 @@ export function searchClientList(clients, value) {
     type: 'modal',
     title: {
       type: 'plain_text',
-      text: `Найдено ${clientCount} клиента`,
-      emoji: true,
-    },
-    submit: {
-      type: 'plain_text',
-      text: 'Вперед',
+      text: `Найдено результатов: ${clientCount}`,
       emoji: true,
     },
     close: {
       type: 'plain_text',
-      text: 'Отмена',
+      text: 'Закрыть',
       emoji: true,
     },
     blocks: [
@@ -217,6 +212,8 @@ export function searchClientList(clients, value) {
     clients.forEach((client) => {
       const phone = client.phones.length !== 0 ? `${formatPhoneNumber(client.phones.find((phoneVal) => phoneVal.is_main === true).tel_number, true)}` : 'Нет данных';
       const email = client.emails.length !== 0 ? client.emails.find((emailVal) => emailVal.is_main === true).address : 'Нет данных';
+      const site = client.website ? client.website : 'Нет данных';
+      const address = client.addresses ? client.addresses[0] : 'Нет данных';
       let clientName = client.first_name;
       if (!client.is_company) {
         clientName = `${client.first_name} ${client.last_name} ${client.middle_name}`;
@@ -225,7 +222,7 @@ export function searchClientList(clients, value) {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*<${this.frontUrl}/#/clients/${client.id}|${clientName}>*\n:telephone_receiver: Телефон: *${phone}*\n:email: Почта: *${email}*\n:computer: Сайт: *${client.website}*\n:office: Адрес: *Тест*`,
+          text: `*<${frontUrl}/#/clients/${client.id}|${clientName}>*\n:telephone_receiver: *Телефон:* ${phone}\n:email: *Почта:* ${email}\n:computer: *Сайт:* ${site}\n:office: *Адрес:* ${address}`,
         },
       };
 

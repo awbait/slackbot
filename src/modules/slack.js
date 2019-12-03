@@ -86,6 +86,15 @@ async function slackOpenModal(trigger, template) {
   }
 }
 
+/**
+ * Реализация команды 'searchclient'.
+ * @param  {string} triggerId
+ */
+function commandSearchclient(triggerId) {
+  const template = objectAssign(modal.searchClient, { external_id: generateId('modal_searchclient_') });
+  slackOpenModal(triggerId, template);
+}
+
 export async function slackHandleActions(payload) {
   switch (payload.type) {
     case 'interactive_message':
@@ -116,9 +125,10 @@ export async function slackHandleActions(payload) {
           break;
         }
         case 'searchclient': {
-          const value = payload.view.state.values.searchclient_phrase.phrase;
-          const clients = await request.searchClients(value);
-          const template = modal.searchClientList(clients, value);
+          const searchStr = payload.view.state.values.searchclient_phrase.phrase.value;
+          console.log(searchStr);
+          const clients = await request.searchClients(searchStr);
+          const template = modal.searchClientList(clients, searchStr);
           slackOpenModal(payload.trigger_id, template);
           break;
         }
@@ -208,6 +218,16 @@ export async function slackHandleActions(payload) {
           break;
       }
       break;
+    case 'message_action':
+      switch (payload.callback_id) {
+        case 'searchclient':
+          commandSearchclient(payload.trigger_id);
+          break;
+        default:
+          logger.warn('HANDLE-ACTION: message_action:: Поступили данные неизвестного типа', payload);
+          break;
+      }
+      break;
     case 'view_closed':
       logger.debug('HANDLE-ACTIONS:: Необъявленная форма была закрыта');
 
@@ -225,8 +245,7 @@ export function slackHandleEvents(payload) {
 export function slackHandleCommands(payload) {
   switch (payload.command) {
     case '/searchclient': {
-      const template = objectAssign(modal.searchClient, { external_id: generateId('modal_searchclient_') });
-      slackOpenModal(payload.trigger_id, template);
+      commandSearchclient(payload.trigger_id);
       break;
     }
     default:

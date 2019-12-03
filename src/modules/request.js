@@ -141,22 +141,22 @@ export async function phoneAddToBlacklist(phoneFrom, phoneTo, comment, worker) {
   return response.body;
 }
 
-export async function searchClients(string) {
+export async function searchClients(str) {
   const options = {
     uri: `${url}/api/clients`,
     qs: {
-      search: string,
+      search: str,
     },
     headers,
     resolveWithFullResponse: true,
     json: true,
     time: true,
   };
+
   checkAuthToken();
   const response = await request(options);
-
   logger.debug(`REQUEST: searchClients:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
   logger.trace('REQUEST-HEADERS: searchClients::', response.headers);
-
+  checkAuthToken(response.headers);
   return response.body;
 }
