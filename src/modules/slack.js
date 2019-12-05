@@ -126,7 +126,6 @@ export async function slackHandleActions(payload) {
         }
         case 'searchclient': {
           const searchStr = payload.view.state.values.searchclient_phrase.phrase.value;
-          console.log(searchStr);
           const clients = await request.searchClients(searchStr);
           const template = modal.searchClientList(clients, searchStr);
           slackOpenModal(payload.trigger_id, template);
@@ -250,6 +249,21 @@ export function slackHandleCommands(payload) {
     }
     default:
       logger.warn('HANDLE-COMMANDS:: Поступили данные неизвестного типа:', payload);
+      break;
+  }
+}
+
+export async function handleExternalData(res, payload) {
+  switch (payload.block_id) {
+    case 'notify_company': {
+      const searchStr = payload.value;
+      const clients = await request.searchClients(searchStr);
+      const template = modal.generateEDClients(clients);
+      console.log(template);
+      res.json(template);
+      break;
+    }
+    default:
       break;
   }
 }

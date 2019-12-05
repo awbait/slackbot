@@ -6,6 +6,7 @@ export function stringToArr(string) {
   const arr = string.split(/[\s,]+/);
   return arr;
 }
+
 /**
  * Генерация случайной строки
  * @param  {string} string - Добавит указанную строку перед сгенерированным id
@@ -14,6 +15,7 @@ export function generateId(string) {
   const random = `f${(+new Date()).toString(16)}`;
   return string ? string + random : random;
 }
+
 /**
  * Объединить два объекта
  * @param  {object} sourceObj
@@ -23,6 +25,7 @@ export function objectAssign(sourceObj, mutableObj) {
   const result = Object.assign(sourceObj, mutableObj);
   return result;
 }
+
 /**
  * Форматирует номера телефонов
  * @param  {string} number - Номер телефона

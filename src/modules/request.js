@@ -157,6 +157,5 @@ export async function searchClients(str) {
   const response = await request(options);
   logger.debug(`REQUEST: searchClients:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
   logger.trace('REQUEST-HEADERS: searchClients::', response.headers);
-  checkAuthToken(response.headers);
   return response.body;
 }

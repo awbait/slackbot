@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import logger from './modules/logger';
-import { slackHandleActions, slackHandleEvents, slackHandleCommands } from './modules/slack';
+import {
+  slackHandleActions, slackHandleEvents, slackHandleCommands, handleExternalData,
+} from './modules/slack';
 
 dotenv.config({ path: './.env' });
 
@@ -81,5 +83,16 @@ app.post('/slack/commands', (req, res) => {
     logger.trace('POST /slack/commands:', payload);
     res.status(200).end();
     slackHandleCommands(payload);
+  }
+});
+
+app.post('/slack/data', (req, res) => {
+  const data = JSON.parse(req.body.payload);
+  if (data.type === 'block_suggestion') {
+    logger.debug(`POST /slack/data: Поступили данные типа: ${data.type}`);
+    logger.trace('POST /slack/data:', data);
+    if (data.block_id === 'notify_company') {
+      handleExternalData(res, data);
+    }
   }
 });

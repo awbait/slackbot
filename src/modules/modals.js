@@ -373,6 +373,7 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
   };
   let initialStatus = '';
   let initialComment = '';
+
   let initialStatusObject;
   if (currentMsgInfo) {
     initialStatus = currentMsgInfo[0].text.replace(':information_source: *Статус:* ', '');
@@ -420,7 +421,7 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
         block_id: 'notify_status',
         label: {
           type: 'plain_text',
-          text: 'Установить статус',
+          text: 'Статус',
           emoji: true,
         },
         element: {
@@ -473,6 +474,26 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
               value: 'value-5',
             },
           ],
+        },
+      },
+      {
+        type: 'input',
+        block_id: 'notify_company',
+        optional: true,
+        label: {
+          type: 'plain_text',
+          text: 'Компания',
+          emoji: true,
+        },
+        element: {
+          type: 'external_select',
+          action_id: 'company',
+          placeholder: {
+            type: 'plain_text',
+            text: 'Выберите компанию',
+            emoji: true,
+          },
+          min_query_length: 2,
         },
       },
       {
@@ -558,4 +579,25 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
     blocks,
   };
   return objectArg;
+}
+/**
+ * Сгенерировать JSON селекта клиентов
+ * @param  {array} clients
+ */
+export function generateEDClients(clients) {
+  const json = {
+    options: [],
+  };
+  clients.forEach((client) => {
+    const object = {
+      text: {
+        type: 'plain_text',
+        text: client.first_name,
+      },
+      value: `${client.id}`,
+    };
+
+    json.options.push(object);
+  });
+  return json;
 }
