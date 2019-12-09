@@ -95,6 +95,19 @@ function commandSearchclient(triggerId) {
   slackOpenModal(triggerId, template);
 }
 
+async function modalUpdate(viewUp, viewId) {
+  try {
+    const result = await slack.views.update({
+      view: viewUp,
+      view_id: viewId,
+    });
+    logger.info(`SLACK:: Модальное окно изменено: ${result.view.id}`);
+    logger.trace('SLACK:: Результат открытия модального окна', result);
+  } catch (error) {
+    logger.error(error, error.data.response_metadata.messages);
+  }
+}
+
 export async function slackHandleActions(payload) {
   switch (payload.type) {
     case 'interactive_message':
@@ -133,17 +146,25 @@ export async function slackHandleActions(payload) {
         }
         case 'notifychange': {
           const metadata = stringToArr(payload.view.private_metadata);
+          let channel = null; let timestamp = null; let company = null;
           const message = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
           const author = payload.user.id;
+          [channel, timestamp, company] = metadata;
+          // eslint-disable-next-line max-len
+          const companyName = payload.view.state.values.notify_company.company.selected_option.text.text;
+          // eslint-disable-next-line max-len
+          const companyValue = payload.view.state.values.notify_company.company.selected_option.value;
+          company = `${companyValue}_${companyName}`;
           const objectArg = modal.notifyAddStatus(
-            metadata[0],
-            metadata[1],
+            channel,
+            timestamp,
             message,
             status,
             comment,
             author,
+            company,
           );
           slackUpdateMessage(objectArg);
           break;
@@ -155,25 +176,13 @@ export async function slackHandleActions(payload) {
       break;
     }
     case 'block_actions':
-      /*
-        Обрабатываем по payload.actions[0].actions_id
-        Зарезервированые значения:
-        - blacklist_add (Кнопка "Добавить в ЧС")
-        - blacklsit_reasons (Выбранная причина в селекте)
-        - comment_add
-      */
       switch (payload.actions[0].action_id) {
         case 'blacklist_add': {
-          // Мы должны обновить сообщение
-          // (заменить кнопку "Добавить в ЧС" на селект с разными причинами)
-          // updateMessage(payload);
           const msg = modal.blacklistSelect(payload);
           slackUpdateMessage(msg);
           break;
         }
         case 'blacklist_reasons':
-          // Нужна проверка на выбранное значение,
-          // если причина "другая" открываем модальное окно, иначе формируем данные и отправляем
           console.log(payload.actions[0].selected_option);
           if (
             payload.actions[0].selected_option.text.text === 'Другая причина'
@@ -201,15 +210,22 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
+          const company = payload.actions[0].value;
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, null, company), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts},${company}` });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
           const notifyCurrentInfo = payload.message.blocks[1].elements;
-          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts}` });
+          const notifyCompany = payload.actions[0].value;
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo, notifyCompany), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts},${notifyCompany}` });
           slackOpenModal(payload.trigger_id, temp);
+          break;
+        }
+        case 'status_company': {
+          const viewUpdated = modal.changeCompany(payload.view);
+          modalUpdate(viewUpdated, payload.view.id);
           break;
         }
         default:
@@ -259,7 +275,6 @@ export async function handleExternalData(res, payload) {
       const searchStr = payload.value;
       const clients = await request.searchClients(searchStr);
       const template = modal.generateEDClients(clients);
-      console.log(template);
       res.json(template);
       break;
     }
