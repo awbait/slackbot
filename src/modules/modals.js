@@ -14,11 +14,14 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
   const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
   const phoneToFormatted = formatPhoneNumber(phoneTo);
   let message;
+  let company = 'undefined';
   if (client) {
     if (client.is_company) {
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFromFormatted}`;
+      company = `${client.id}_${client.first_name}`;
     } else {
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFromFormatted}`;
+      company = `${client.id}_${client.first_name}`;
     }
   } else {
     message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонят с номера: ${phoneFromFormatted}`;
@@ -45,7 +48,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
               text: 'Комментарий',
             },
             style: 'primary',
-            value: '123123',
+            value: company,
           },
           {
             type: 'button',
@@ -363,7 +366,7 @@ export function blacklistMessageUpdate(
   return objectArg;
 }
 
-export function notifyUpdateStatus(message, currentMsgInfo) {
+export function notifyUpdateStatus(message, currentMsgInfo, company) {
   const statuses = {
     ':hammer_and_pick: В работе': 'value-1',
     ':question: Недостаточно информации': 'value-2',
@@ -374,6 +377,52 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
   let initialStatus = '';
   let initialComment = '';
 
+  let initialClientName = '';
+
+  let initialCompanyObject;
+  if (company !== 'undefined') {
+    const temp = company.split('_');
+    [, initialClientName] = temp;
+
+    initialCompanyObject = {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*Клиент:* ${initialClientName}`,
+      },
+      accessory: {
+        type: 'button',
+        action_id: 'status_company',
+        text: {
+          type: 'plain_text',
+          emoji: true,
+          text: 'Не правильно?',
+        },
+        value: 'click_me_123',
+      },
+    };
+  } else {
+    initialCompanyObject = {
+      type: 'input',
+      block_id: 'notify_company',
+      optional: true,
+      label: {
+        type: 'plain_text',
+        text: 'Компания',
+        emoji: true,
+      },
+      element: {
+        type: 'external_select',
+        action_id: 'company',
+        placeholder: {
+          type: 'plain_text',
+          text: 'Выберите компанию',
+          emoji: true,
+        },
+        min_query_length: 2,
+      },
+    };
+  }
   let initialStatusObject;
   if (currentMsgInfo) {
     initialStatus = currentMsgInfo[0].text.replace(':information_source: *Статус:* ', '');
@@ -478,26 +527,6 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
       },
       {
         type: 'input',
-        block_id: 'notify_company',
-        optional: true,
-        label: {
-          type: 'plain_text',
-          text: 'Компания',
-          emoji: true,
-        },
-        element: {
-          type: 'external_select',
-          action_id: 'company',
-          placeholder: {
-            type: 'plain_text',
-            text: 'Выберите компанию',
-            emoji: true,
-          },
-          min_query_length: 2,
-        },
-      },
-      {
-        type: 'input',
         block_id: 'notify_comment',
         optional: true,
         label: {
@@ -524,10 +553,11 @@ export function notifyUpdateStatus(message, currentMsgInfo) {
     const element = objectAssign(template.blocks[1].element, initialStatusObject);
     template.blocks[1].element = element;
   }
+  template.blocks.push(initialCompanyObject);
   return template;
 }
 
-export function notifyAddStatus(channel, timestamp, message, status, comment, user) {
+export function notifyAddStatus(channel, timestamp, message, status, comment, user, company) {
   const statusText = `:information_source: *Статус:* ${status}`;
   const userText = `:male-office-worker: *Изменил(а)* <@${user}>`;
   const blocks = [
@@ -545,7 +575,7 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
           text: 'Изменить статус',
           emoji: true,
         },
-        value: 'click_me_123',
+        value: `${company}`,
       },
     },
     {
@@ -580,6 +610,7 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
   };
   return objectArg;
 }
+
 /**
  * Сгенерировать JSON селекта клиентов
  * @param  {array} clients
@@ -600,4 +631,38 @@ export function generateEDClients(clients) {
     json.options.push(object);
   });
   return json;
+}
+
+export function changeCompany(view) {
+  const updatedView = {
+    type: view.type,
+    blocks: view.blocks,
+    private_metadata: view.private_metadata,
+    title: view.title,
+    close: view.close,
+    submit: view.submit,
+    external_id: view.external_id,
+  };
+  const companyObject = {
+    type: 'input',
+    block_id: 'notify_company',
+    optional: true,
+    label: {
+      type: 'plain_text',
+      text: 'Компания',
+      emoji: true,
+    },
+    element: {
+      type: 'external_select',
+      action_id: 'company',
+      placeholder: {
+        type: 'plain_text',
+        text: 'Выберите компанию',
+        emoji: true,
+      },
+      min_query_length: 2,
+    },
+  };
+  updatedView.blocks[3] = companyObject;
+  return updatedView;
 }
