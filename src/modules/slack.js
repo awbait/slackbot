@@ -70,7 +70,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
         template = modal.templateIncallMessage('worker', phoneFrom, phoneTo, client);
       }
     } else {
-      const worker = await request.getClientById(phoneFrom);
+      const worker = await request.getWorkerByPhone(phoneFrom);
       if (worker) {
         template = modal.templateIncallMessage('worker', phoneFrom, phoneTo, worker);
       } else {
@@ -157,24 +157,44 @@ export async function slackHandleActions(payload) {
         }
         case 'searchclient': {
           const searchStr = payload.view.state.values.searchclient_phrase.phrase.value;
-          const clients = await request.searchClients(searchStr);
+          const clients = await request.searchCompany(searchStr);
           const template = modal.searchClientList(clients, searchStr);
           slackOpenModal(payload.trigger_id, template);
           break;
         }
         case 'notifychange': {
           const metadata = stringToArr(payload.view.private_metadata);
-          let channel = null; let timestamp = null; let company = null;
+          let channel = null; let timestamp = null; let company = null; let worker = null;
           const message = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
           const author = payload.user.id;
-          [channel, timestamp, company] = metadata;
-          // eslint-disable-next-line max-len
-          const companyName = payload.view.state.values.notify_company.company.selected_option.text.text;
-          // eslint-disable-next-line max-len
-          const companyValue = payload.view.state.values.notify_company.company.selected_option.value;
-          company = `${companyValue}_${companyName}`;
+          let companyVal = null; let workerVal = null;
+          [channel, timestamp, companyVal, workerVal] = metadata;
+
+          if (companyVal) {
+            [company] = companyVal.split('_');
+          }
+          if (workerVal) {
+            [worker] = workerVal.split('_');
+          }
+
+          if (payload.view.state.values.notify_company) {
+            // eslint-disable-next-line max-len
+            // const companyName = payload.view.state.values.notify_company.company.selected_option.text.text;
+            // eslint-disable-next-line max-len
+            const companyValue = payload.view.state.values.notify_company.company.selected_option.value;
+            company = companyValue;
+          }
+          if (payload.view.state.values.notify_worker) {
+            // eslint-disable-next-line max-len
+            // const workerName = payload.view.state.values.notify_worker.worker.selected_option.text.text;
+            // eslint-disable-next-line max-len
+            const workerValue = payload.view.state.values.notify_worker.worker.selected_option.value;
+            worker = workerValue;
+          }
+
+          const value = `${company}_${worker}`;
           const objectArg = modal.notifyAddStatus(
             channel,
             timestamp,
@@ -182,7 +202,7 @@ export async function slackHandleActions(payload) {
             status,
             comment,
             author,
-            company,
+            value,
           );
           slackUpdateMessage(objectArg);
           break;
@@ -228,21 +248,50 @@ export async function slackHandleActions(payload) {
           break;
         case 'status_change': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const company = payload.actions[0].value;
-          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, null, company), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts},${company}` });
+          const companyVal = payload.actions[0].value;
+          let company = companyVal;
+          let worker;
+          let metadata;
+          if (company === 'undefined') {
+            metadata = `${payload.channel.id},${payload.message.ts},${company}`;
+          } else {
+            const temp = companyVal.split('_');
+            company = await request.getClientById(temp[0]);
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name}`;
+            if (temp[1]) {
+              worker = await request.getClientById(temp[1]);
+              metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name},${worker.id}_${worker.last_name}`;
+            }
+          }
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, null, company, worker), { external_id: generateId('modal_notifychange_'), private_metadata: metadata });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
           const notifyCurrentInfo = payload.message.blocks[1].elements;
-          const notifyCompany = payload.actions[0].value;
-          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo, notifyCompany), { external_id: generateId('modal_notifychange_'), private_metadata: `${payload.channel.id},${payload.message.ts},${notifyCompany}` });
+          const notifyValue = payload.actions[0].value;
+          let company; let worker; let metadata = `${payload.channel.id},${payload.message.ts}`;
+          [company, worker] = notifyValue.split('_');
+          if (company) {
+            company = await request.getClientById(company);
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name}`;
+          }
+          if (worker) {
+            worker = await request.getClientById(worker);
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name},${worker.id}_${worker.last_name}`;
+          }
+          const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo, company, worker), { external_id: generateId('modal_notifychange_'), private_metadata: metadata });
           slackOpenModal(payload.trigger_id, temp);
           break;
         }
         case 'status_company': {
           const viewUpdated = modal.changeCompany(payload.view);
+          modalUpdate(viewUpdated, payload.view.id);
+          break;
+        }
+        case 'status_worker': {
+          const viewUpdated = modal.changeWorker(payload.view);
           modalUpdate(viewUpdated, payload.view.id);
           break;
         }
@@ -288,11 +337,17 @@ export function slackHandleCommands(payload) {
 }
 
 export async function handleExternalData(res, payload) {
+  const searchStr = payload.value;
   switch (payload.block_id) {
     case 'notify_company': {
-      const searchStr = payload.value;
-      const clients = await request.searchClients(searchStr);
-      const template = modal.generateEDClients(clients);
+      const companies = await request.searchCompany(searchStr);
+      const template = modal.generateEDCompanies(companies);
+      res.json(template);
+      break;
+    }
+    case 'notify_worker': {
+      const workers = await request.searchWorker(searchStr);
+      const template = modal.generateEDWorkers(workers);
       res.json(template);
       break;
     }

@@ -180,15 +180,15 @@ export async function phoneAddToBlacklist(phoneFrom, phoneTo, comment, worker) {
 }
 
 /**
- * Запрос Поиск клиента(ов) по строке
+ * Запрос: Поиск компании(й) по заданной строке
  * @param  {string} str
  */
-export async function searchClients(str) {
+export async function searchCompany(str) {
   await checkAuthToken();
   const options = {
     uri: `${url}/api/clients`,
     qs: {
-      search: str,
+      searchcomp: str,
     },
     headers: storageToken,
     resolveWithFullResponse: true,
@@ -197,8 +197,31 @@ export async function searchClients(str) {
   };
   const response = await request(options);
   storageToken['access-token'] = response.headers['access-token'];
-  logger.debug(`REQUEST: searchClients:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
-  logger.trace('REQUEST-HEADERS: searchClients::', response.headers);
+  logger.debug(`REQUEST: searchCompany:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
+  logger.trace('REQUEST-HEADERS: searchCompany::', response.headers);
+  return response.body;
+}
+
+/**
+ * Запрос: Поиск сотрудника(ов) по заданной строке
+ * @param  {string} str
+ */
+export async function searchWorker(str) {
+  await checkAuthToken();
+  const options = {
+    uri: `${url}/api/clients`,
+    qs: {
+      searchpeople: str,
+    },
+    headers: storageToken,
+    resolveWithFullResponse: true,
+    json: true,
+    time: true,
+  };
+  const response = await request(options);
+  storageToken['access-token'] = response.headers['access-token'];
+  logger.debug(`REQUEST: searchWorker:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
+  logger.trace('REQUEST-HEADERS: searchWorker::', response.headers);
   return response.body;
 }
 

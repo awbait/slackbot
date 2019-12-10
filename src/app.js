@@ -91,8 +91,6 @@ app.post('/slack/data', (req, res) => {
   if (data.type === 'block_suggestion') {
     logger.debug(`POST /slack/data: Поступили данные типа: ${data.type}`);
     logger.trace('POST /slack/data:', data);
-    if (data.block_id === 'notify_company') {
-      handleExternalData(res, data);
-    }
+    handleExternalData(res, data);
   }
 });

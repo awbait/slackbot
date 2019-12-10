@@ -27,12 +27,12 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, client, company)
       break;
     case 'company_worker':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name} ${client.last_name}> (<${frontUrl}/#/clients/${company.id}|${company.first_name})*\nЗвонок с номера: ${phoneFromFormatted}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.last_name} ${client.first_name} ${client.middle_name}> (<${frontUrl}/#/clients/${company.id}|${company.first_name}>)*\nЗвонок с номера: ${phoneFromFormatted}`;
       statusValue = `${company.id}_${client.id}`;
       break;
     case 'worker':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${client.id}|${client.first_name} ${client.last_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${client.id}|${client.last_name} ${client.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
       break;
     default:
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
@@ -380,7 +380,7 @@ export function blacklistMessageUpdate(
   return objectArg;
 }
 
-export function notifyUpdateStatus(message, currentMsgInfo, company) {
+export function notifyUpdateStatus(message, currentMsgInfo, company, worker) {
   const statuses = {
     ':hammer_and_pick: В работе': 'value-1',
     ':question: Недостаточно информации': 'value-2',
@@ -391,30 +391,28 @@ export function notifyUpdateStatus(message, currentMsgInfo, company) {
   let initialStatus = '';
   let initialComment = '';
 
-  let initialClientName = '';
-
   let initialCompanyObject;
+  let initialWorkerObject;
   if (company !== 'undefined') {
-    const temp = company.split('_');
-    [, initialClientName] = temp;
-
-    initialCompanyObject = {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: `*Клиент:* ${initialClientName}`,
-      },
-      accessory: {
-        type: 'button',
-        action_id: 'status_company',
+    if (company) {
+      initialCompanyObject = {
+        type: 'section',
         text: {
-          type: 'plain_text',
-          emoji: true,
-          text: 'Не правильно?',
+          type: 'mrkdwn',
+          text: `*Компания:* ${company.first_name}`,
         },
-        value: 'click_me_123',
-      },
-    };
+        accessory: {
+          type: 'button',
+          action_id: 'status_company',
+          text: {
+            type: 'plain_text',
+            emoji: true,
+            text: 'Не правильно?',
+          },
+          value: `${company.id}`,
+        },
+      };
+    }
   } else {
     initialCompanyObject = {
       type: 'input',
@@ -430,10 +428,50 @@ export function notifyUpdateStatus(message, currentMsgInfo, company) {
         action_id: 'company',
         placeholder: {
           type: 'plain_text',
-          text: 'Выберите компанию',
+          text: 'Поиск компании',
           emoji: true,
         },
-        min_query_length: 2,
+        min_query_length: 3,
+      },
+    };
+  }
+  if (worker && worker !== 'undefined') {
+    initialWorkerObject = {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*Сотрудник:* ${worker.last_name} ${worker.first_name} ${worker.middle_name}`,
+      },
+      accessory: {
+        type: 'button',
+        action_id: 'status_worker',
+        text: {
+          type: 'plain_text',
+          emoji: true,
+          text: 'Не правильно?',
+        },
+        value: `${worker.id}`,
+      },
+    };
+  } else {
+    initialWorkerObject = {
+      type: 'input',
+      block_id: 'notify_worker',
+      optional: true,
+      label: {
+        type: 'plain_text',
+        text: 'Сотрудник',
+        emoji: true,
+      },
+      element: {
+        type: 'external_select',
+        action_id: 'worker',
+        placeholder: {
+          type: 'plain_text',
+          text: 'Поиск сотрудника',
+          emoji: true,
+        },
+        min_query_length: 3,
       },
     };
   }
@@ -568,6 +606,7 @@ export function notifyUpdateStatus(message, currentMsgInfo, company) {
     template.blocks[1].element = element;
   }
   template.blocks.push(initialCompanyObject);
+  template.blocks.push(initialWorkerObject);
   return template;
 }
 
@@ -629,17 +668,39 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
  * Сгенерировать JSON селекта клиентов
  * @param  {array} clients
  */
-export function generateEDClients(clients) {
+export function generateEDCompanies(companies) {
   const json = {
     options: [],
   };
-  clients.forEach((client) => {
+  companies.forEach((company) => {
     const object = {
       text: {
         type: 'plain_text',
-        text: client.first_name,
+        text: company.first_name,
       },
-      value: `${client.id}`,
+      value: `${company.id}`,
+    };
+
+    json.options.push(object);
+  });
+  return json;
+}
+
+/**
+ * Сгенерировать JSON селекта сотрудников
+ * @param  {array} clients
+ */
+export function generateEDWorkers(workers) {
+  const json = {
+    options: [],
+  };
+  workers.forEach((worker) => {
+    const object = {
+      text: {
+        type: 'plain_text',
+        text: `${worker.last_name} ${worker.first_name} ${worker.middle_name}`,
+      },
+      value: `${worker.id}`,
     };
 
     json.options.push(object);
@@ -678,5 +739,39 @@ export function changeCompany(view) {
     },
   };
   updatedView.blocks[3] = companyObject;
+  return updatedView;
+}
+
+export function changeWorker(view) {
+  const updatedView = {
+    type: view.type,
+    blocks: view.blocks,
+    private_metadata: view.private_metadata,
+    title: view.title,
+    close: view.close,
+    submit: view.submit,
+    external_id: view.external_id,
+  };
+  const companyObject = {
+    type: 'input',
+    block_id: 'notify_worker',
+    optional: true,
+    label: {
+      type: 'plain_text',
+      text: 'Сотрудник',
+      emoji: true,
+    },
+    element: {
+      type: 'external_select',
+      action_id: 'worker',
+      placeholder: {
+        type: 'plain_text',
+        text: 'Поиск сотрудника',
+        emoji: true,
+      },
+      min_query_length: 3,
+    },
+  };
+  updatedView.blocks[4] = companyObject;
   return updatedView;
 }
