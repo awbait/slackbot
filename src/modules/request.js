@@ -201,3 +201,38 @@ export async function searchClients(str) {
   logger.trace('REQUEST-HEADERS: searchClients::', response.headers);
   return response.body;
 }
+
+export async function getClientById(id) {
+  await checkAuthToken();
+  const options = {
+    uri: `${url}/api/clients/${id}`,
+    headers: storageToken,
+    resolveWithFullResponse: true,
+    json: true,
+    time: true,
+  };
+  const response = await request(options);
+  storageToken['access-token'] = response.headers['access-token'];
+  logger.debug(`REQUEST: getClientById:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
+  logger.trace('REQUEST-HEADERS: getClientById::', response.headers);
+  return response.body;
+}
+
+export async function getWorkerByPhone(phone) {
+  await checkAuthToken();
+  const options = {
+    uri: `${url}/api/workers`,
+    qs: {
+      searchtel: phone,
+    },
+    headers: storageToken,
+    resolveWithFullResponse: true,
+    json: true,
+    time: true,
+  };
+  const response = await request(options);
+  storageToken['access-token'] = response.headers['access-token'];
+  logger.debug(`REQUEST: getWorkerByPhone:: Статус: ${response.statusCode}. Запрос выполнился за: ${response.elapsedTime / 1000} s`);
+  logger.trace('REQUEST-HEADERS: getWorkerByPhone::', response.headers);
+  return response.body;
+}

@@ -5,29 +5,43 @@ dotenv.config();
 const frontUrl = process.env.FRONT_URL;
 
 /**
- * Формирует сообщение при входящем звонке
+ * @param  {string} type - Тип уведомления
  * @param  {string} phoneFrom - Номер звонящего
- * @param  {string} phoneTo - Номер на который звонят
- * @param  {object} client - Объект клиента из базы данных
+ * @param  {string} phoneTo - Номер на который поступил вызов
+ * @param  {object} client - Сотрудник
+ * @param  {object} company - Компания
  */
-export function formIncallAtt(phoneFrom, phoneTo, client) {
+export function templateIncallMessage(type, phoneFrom, phoneTo, client, company) {
   const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
   const phoneToFormatted = formatPhoneNumber(phoneTo);
+
   let message;
-  let company = 'undefined';
-  if (client) {
-    if (client.is_company) {
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name}>*\nЗвонят с номера: ${phoneFromFormatted}`;
-      company = `${client.id}_${client.first_name}`;
-    } else {
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *${client.first_name} ${client.last_name} ${client.middle_name}*\nЗвонят с номера: ${phoneFromFormatted}`;
-      company = `${client.id}_${client.first_name}`;
-    }
-  } else {
-    message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонят с номера: ${phoneFromFormatted}`;
+  let messagePretext;
+  let statusValue = 'undefined';
+
+  switch (type) {
+    case 'company':
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${company.id}|${company.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+      statusValue = `${company.id}`;
+      break;
+    case 'company_worker':
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.first_name} ${client.last_name}> (<${frontUrl}/#/clients/${company.id}|${company.first_name})*\nЗвонок с номера: ${phoneFromFormatted}`;
+      statusValue = `${company.id}_${client.id}`;
+      break;
+    case 'worker':
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${client.id}|${client.first_name} ${client.last_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+      break;
+    default:
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с неизвестного номера: ${phoneFromFormatted}`;
+      break;
   }
+
   const template = {
-    text: message,
+    text: messagePretext,
     blocks: [
       {
         type: 'section',
@@ -48,7 +62,7 @@ export function formIncallAtt(phoneFrom, phoneTo, client) {
               text: 'Комментарий',
             },
             style: 'primary',
-            value: company,
+            value: statusValue,
           },
           {
             type: 'button',

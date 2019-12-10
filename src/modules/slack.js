@@ -58,12 +58,30 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       username: 'BlackBot',
     });
   } else {
-    const callerName = await request.getNameCaller(phoneFrom);
-    const incallAtt = modal.formIncallAtt(phoneFrom, phoneTo, callerName);
+    const client = await request.getNameCaller(phoneFrom);
+    let template;
+    if (client) {
+      if (client.is_company) {
+        template = modal.templateIncallMessage('company', phoneFrom, phoneTo, null, client);
+      } else if (client.company) {
+        const company = await request.getClientById(client.company);
+        template = modal.templateIncallMessage('company_worker', phoneFrom, phoneTo, client, company);
+      } else {
+        template = modal.templateIncallMessage('worker', phoneFrom, phoneTo, client);
+      }
+    } else {
+      const worker = await request.getClientById(phoneFrom);
+      if (worker) {
+        template = modal.templateIncallMessage('worker', phoneFrom, phoneTo, worker);
+      } else {
+        template = modal.templateIncallMessage(null, phoneFrom, phoneTo);
+      }
+    }
+
     slackSendMessage({
       channel: channels[phoneTo],
-      text: incallAtt.text,
-      blocks: incallAtt.blocks,
+      text: template.text,
+      blocks: template.blocks,
       icon_emoji: ':telephone_receiver:',
     });
   }
