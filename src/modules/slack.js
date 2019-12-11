@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import dotenv from 'dotenv';
 import { WebClient } from '@slack/client';
 import * as request from './request';
@@ -165,12 +166,13 @@ export async function slackHandleActions(payload) {
         case 'notifychange': {
           const metadata = stringToArr(payload.view.private_metadata);
           let channel = null; let timestamp = null; let company = null; let worker = null;
+          let companyVal = null; let workerVal = null;
           const message = payload.view.blocks[0].text.text;
           const status = payload.view.state.values.notify_status.status.selected_option.text.text;
           const comment = payload.view.state.values.notify_comment.comment.value;
           const author = payload.user.id;
-          let companyVal = null; let workerVal = null;
           [channel, timestamp, companyVal, workerVal] = metadata;
+          logger.trace(channel, timestamp, companyVal, workerVal);
 
           if (companyVal) {
             [company] = companyVal.split('_');
@@ -178,23 +180,36 @@ export async function slackHandleActions(payload) {
           if (workerVal) {
             [worker] = workerVal.split('_');
           }
+          logger.trace(payload.view.state.values);
 
-          if (payload.view.state.values.notify_company) {
-            // eslint-disable-next-line max-len
+
+          // КАК НАМ ПОНЯТЬ ЧТО КАКОЕ ТО ЗНАЧЕНИЕ ИЗМЕНИЛОСЬ????
+          const temp1 = payload.view.state.values.notify_company ? payload.view.state.values.notify_company.company.selected_option : undefined;
+          const temp2 = payload.view.state.values.notify_worker ? payload.view.state.values.notify_worker.worker.selected_option : undefined;
+          logger.trace(temp1, temp2);
+          if (temp1) {
             // const companyName = payload.view.state.values.notify_company.company.selected_option.text.text;
-            // eslint-disable-next-line max-len
             const companyValue = payload.view.state.values.notify_company.company.selected_option.value;
             company = companyValue;
+          } else if (companyVal) {
+            [company] = companyVal.split('_'); // TODO: FIX
+          } else {
+            company = 'undefined';
           }
-          if (payload.view.state.values.notify_worker) {
-            // eslint-disable-next-line max-len
+          if (temp2) {
             // const workerName = payload.view.state.values.notify_worker.worker.selected_option.text.text;
-            // eslint-disable-next-line max-len
             const workerValue = payload.view.state.values.notify_worker.worker.selected_option.value;
             worker = workerValue;
+          } else if (workerVal) {
+            [worker] = workerVal.split('_'); // TODO: FIX
+          } else {
+            worker = 'undefined';
           }
 
+          logger.trace(worker, company);
+
           const value = `${company}_${worker}`;
+          logger.trace(value);
           const objectArg = modal.notifyAddStatus(
             channel,
             timestamp,
@@ -257,10 +272,10 @@ export async function slackHandleActions(payload) {
           } else {
             const temp = companyVal.split('_');
             company = await request.getClientById(temp[0]);
-            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name}`;
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id}`;
             if (temp[1]) {
               worker = await request.getClientById(temp[1]);
-              metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name},${worker.id}_${worker.last_name}`;
+              metadata = `${payload.channel.id},${payload.message.ts},${company.id},${worker.id}`;
             }
           }
           const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, null, company, worker), { external_id: generateId('modal_notifychange_'), private_metadata: metadata });
@@ -273,13 +288,13 @@ export async function slackHandleActions(payload) {
           const notifyValue = payload.actions[0].value;
           let company; let worker; let metadata = `${payload.channel.id},${payload.message.ts}`;
           [company, worker] = notifyValue.split('_');
-          if (company) {
+          if (company && company !== 'undefined') {
             company = await request.getClientById(company);
-            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name}`;
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id}`;
           }
-          if (worker) {
+          if (worker && worker !== 'undefined') {
             worker = await request.getClientById(worker);
-            metadata = `${payload.channel.id},${payload.message.ts},${company.id}_${company.first_name},${worker.id}_${worker.last_name}`;
+            metadata = `${payload.channel.id},${payload.message.ts},${company.id},${worker.id}`;
           }
           const temp = objectAssign(modal.notifyUpdateStatus(notifyMsg, notifyCurrentInfo, company, worker), { external_id: generateId('modal_notifychange_'), private_metadata: metadata });
           slackOpenModal(payload.trigger_id, temp);
