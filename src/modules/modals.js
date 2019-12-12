@@ -11,7 +11,7 @@ const frontUrl = process.env.FRONT_URL;
  * @param  {object} client - Сотрудник
  * @param  {object} company - Компания
  */
-export function templateIncallMessage(type, phoneFrom, phoneTo, client, company) {
+export function templateIncallMessage(type, phoneFrom, phoneTo, worker, company) {
   const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
   const phoneToFormatted = formatPhoneNumber(phoneTo);
 
@@ -19,24 +19,45 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, client, company)
   let messagePretext;
   let statusValue = 'undefined';
 
+  const companyObject = {
+    type: 'mrkdwn',
+  };
+  const workerObject = {
+    type: 'mrkdwn',
+  };
+  const undefinedObject = {
+    type: 'mrkdwn',
+  };
+
   switch (type) {
     case 'company':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${company.id}|${company.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с номера: ${phoneFromFormatted}`;
+
+      companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`;
+
       statusValue = `${company.id}`;
       break;
     case 'company_worker':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/clients/${client.id}|${client.last_name} ${client.first_name} ${client.middle_name}> (<${frontUrl}/#/clients/${company.id}|${company.first_name}>)*\nЗвонок с номера: ${phoneFromFormatted}`;
-      statusValue = `${company.id}_${client.id}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с номера: ${phoneFromFormatted}`;
+
+      companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`;
+      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${worker.id}|${worker.last_name} ${worker.first_name} ${worker.middle_name}>`;
+
+      statusValue = `${company.id}_${worker.id}`;
       break;
     case 'worker':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${client.id}|${client.last_name} ${client.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
+
+      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name} ${worker.middle_name}>`;
       break;
     default:
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с неизвестного номера: ${phoneFromFormatted}`;
+
+      undefinedObject.text = ':question: Номер неизвестен :question:';
       break;
   }
 
@@ -49,6 +70,10 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, client, company)
           type: 'mrkdwn',
           text: message,
         },
+      },
+      {
+        type: 'context',
+        elements: [],
       },
       {
         type: 'actions',
@@ -79,6 +104,22 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, client, company)
       },
     ],
   };
+
+  switch (type) {
+    case 'company':
+      template.blocks[1].elements.push(companyObject);
+      break;
+    case 'company_worker':
+      template.blocks[1].elements.push(companyObject);
+      template.blocks[1].elements.push(workerObject);
+      break;
+    case 'worker':
+      template.blocks[1].elements.push(workerObject);
+      break;
+    default:
+      template.blocks[1].elements.push(undefinedObject);
+      break;
+  }
 
   return template;
 }
@@ -610,7 +651,8 @@ export function notifyUpdateStatus(message, currentMsgInfo, company, worker) {
   return template;
 }
 
-export function notifyAddStatus(channel, timestamp, message, status, comment, user, company) {
+// eslint-disable-next-line max-len
+export function notifyAddStatus(channel, timestamp, message, status, comment, user, value, companyData, workerData) {
   const statusText = `:information_source: *Статус:* ${status}`;
   const userText = `:male-office-worker: *Изменил(а)* <@${user}>`;
   const blocks = [
@@ -628,8 +670,15 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
           text: 'Изменить статус',
           emoji: true,
         },
-        value: `${company}`,
+        value: `${value}`,
       },
+    },
+    {
+      type: 'context',
+      elements: [],
+    },
+    {
+      type: 'divider',
     },
     {
       type: 'context',
@@ -652,8 +701,34 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
       type: 'mrkdwn',
       text: `${commentText}`,
     };
-    const author = blocks[1].elements.pop();
-    blocks[1].elements.push(commentObj, author);
+    const author = blocks[3].elements.pop();
+    blocks[3].elements.push(commentObj, author);
+  }
+
+  const companyObject = {
+    type: 'mrkdwn',
+  };
+  const workerObject = {
+    type: 'mrkdwn',
+  };
+  const undefinedObject = {
+    type: 'mrkdwn',
+  };
+
+  if (companyData && workerData) {
+    companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${companyData.id}|${companyData.first_name}>`;
+    workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${workerData.id}|${workerData.last_name} ${workerData.first_name} ${workerData.middle_name}>`;
+    blocks[1].elements.push(companyObject);
+    blocks[1].elements.push(workerObject);
+  } else if (companyData) {
+    companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${companyData.id}|${companyData.first_name}>`;
+    blocks[1].elements.push(companyObject);
+  } else if (workerData) {
+    workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${workerData.id}|${workerData.last_name} ${workerData.first_name} ${workerData.middle_name}>`;
+    blocks[1].elements.push(workerObject);
+  } else {
+    undefinedObject.text = ':question: Номер неизвестен :question:';
+    blocks[1].elements.push(undefinedObject);
   }
 
   const objectArg = {

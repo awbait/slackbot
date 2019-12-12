@@ -59,8 +59,8 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       username: 'BlackBot',
     });
   } else {
-    const client = await request.getNameCaller(phoneFrom);
     let template;
+    const client = await request.getNameCaller(phoneFrom);
     if (client) {
       if (client.is_company) {
         template = modal.templateIncallMessage('company', phoneFrom, phoneTo, null, client);
@@ -101,7 +101,7 @@ async function slackOpenModal(trigger, template) {
     logger.info(`SLACK:: Открыто модальное окно: ${result.view.id}`);
     logger.trace('SLACK:: Результат открытия модального окна', result);
   } catch (error) {
-    logger.error(error);
+    logger.error(error, error.data.response_metadata.messages);
   }
 }
 
@@ -180,13 +180,10 @@ export async function slackHandleActions(payload) {
           if (workerVal) {
             [worker] = workerVal.split('_');
           }
-          logger.trace(payload.view.state.values);
 
-
-          // КАК НАМ ПОНЯТЬ ЧТО КАКОЕ ТО ЗНАЧЕНИЕ ИЗМЕНИЛОСЬ????
           const temp1 = payload.view.state.values.notify_company ? payload.view.state.values.notify_company.company.selected_option : undefined;
           const temp2 = payload.view.state.values.notify_worker ? payload.view.state.values.notify_worker.worker.selected_option : undefined;
-          logger.trace(temp1, temp2);
+
           if (temp1) {
             // const companyName = payload.view.state.values.notify_company.company.selected_option.text.text;
             const companyValue = payload.view.state.values.notify_company.company.selected_option.value;
@@ -206,10 +203,14 @@ export async function slackHandleActions(payload) {
             worker = 'undefined';
           }
 
-          logger.trace(worker, company);
-
+          let companyData; let workerData;
           const value = `${company}_${worker}`;
-          logger.trace(value);
+          if (company && company !== 'undefined') {
+            companyData = await request.getClientById(company);
+          }
+          if (worker && worker !== 'undefined') {
+            workerData = await request.getClientById(worker);
+          }
           const objectArg = modal.notifyAddStatus(
             channel,
             timestamp,
@@ -218,6 +219,10 @@ export async function slackHandleActions(payload) {
             comment,
             author,
             value,
+            companyData,
+            workerData,
+            temp1,
+            temp2,
           );
           slackUpdateMessage(objectArg);
           break;
@@ -284,7 +289,7 @@ export async function slackHandleActions(payload) {
         }
         case 'status_edit': {
           const notifyMsg = payload.message.blocks[0].text.text;
-          const notifyCurrentInfo = payload.message.blocks[1].elements;
+          const notifyCurrentInfo = payload.message.blocks[3].elements;
           const notifyValue = payload.actions[0].value;
           let company; let worker; let metadata = `${payload.channel.id},${payload.message.ts}`;
           [company, worker] = notifyValue.split('_');
