@@ -366,7 +366,7 @@ export function blacklistSelect(message) {
     ],
   };
 
-  msg.message.blocks[1] = messageBlock;
+  msg.message.blocks[2] = messageBlock;
   const objectArg = {
     channel: msg.channel.id,
     ts: msg.message.ts,
@@ -374,6 +374,39 @@ export function blacklistSelect(message) {
   };
   return objectArg;
 }
+
+export function blacklistLoaderMessageUpdate(message, channel) {
+  const msg = message;
+
+  const divider = {
+    type: 'divider',
+  };
+  const loader = {
+    type: 'context',
+    elements: [
+      {
+        type: 'image',
+        image_url: 'https://i.imgur.com/WRQcGqB.png',
+        alt_text: 'loader',
+      },
+      {
+        type: 'mrkdwn',
+        text: '*Добавление номера в черный список*',
+      },
+    ],
+  };
+
+  msg.blocks[2] = divider;
+  msg.blocks.push(loader);
+
+  const objectArg = {
+    channel,
+    ts: message.ts,
+    blocks: msg.blocks,
+  };
+  return objectArg;
+}
+
 /**
  * Формирует измененное сообщение при добавлении номера в ЧС
  * @param  {string} userId - slack user id
@@ -383,40 +416,30 @@ export function blacklistSelect(message) {
  * @param  {string} phoneTo - Номер на который был произведен вызов
  * @param  {string} phoneFrom - Номер с которого звонили
  */
-export function blacklistMessageUpdate(
-  userId,
-  timestamp,
-  channel,
-  reason,
-  phoneFrom,
-  phoneTo,
-) {
-  const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
-  const phoneToFormatted = formatPhoneNumber(phoneTo);
+export function blacklistMessageUpdate(userId, message, channel, reason) {
+  const msg = message;
 
-  const blocks = [
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text:
-          `Коллеги, входящий звонок на ${phoneToFormatted}!\n`
-          + `Звонят с номера: ${phoneFromFormatted}`,
-        verbatim: false,
+  const result = {
+    type: 'context',
+    elements: [
+      {
+        type: 'image',
+        image_url: 'https://i.imgur.com/RPQcuiT.png',
+        alt_text: 'OK',
       },
-    },
-    {
-      type: 'section',
-      text: {
+      {
         type: 'mrkdwn',
-        text: `:x: <@${userId}> добавил номер в черный список: ${reason}`,
+        text: `<@${userId}> *добавил номер в черный список: ${reason}*`,
       },
-    },
-  ];
+    ],
+  };
+
+  msg.blocks[3] = result;
+
   const objectArg = {
     channel,
-    ts: timestamp,
-    blocks,
+    ts: msg.ts,
+    blocks: msg.blocks,
   };
   return objectArg;
 }

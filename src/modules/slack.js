@@ -241,7 +241,6 @@ export async function slackHandleActions(payload) {
           break;
         }
         case 'blacklist_reasons':
-          console.log(payload.actions[0].selected_option);
           if (
             payload.actions[0].selected_option.text.text === 'Другая причина'
           ) {
@@ -249,6 +248,9 @@ export async function slackHandleActions(payload) {
             slackOpenModal(payload.trigger_id, template);
           } else {
             const phones = stringToArr(payload.actions[0].selected_option.value);
+            logger.trace(payload.message.blocks);
+            const objectArgLoader = modal.blacklistLoaderMessageUpdate(payload.message, payload.channel.id);
+            slackUpdateMessage(objectArgLoader);
             const reason = await request.phoneAddToBlacklist(
               phones[0],
               phones[1],
@@ -257,11 +259,9 @@ export async function slackHandleActions(payload) {
             );
             const objectArg = modal.blacklistMessageUpdate(
               payload.user.id,
-              payload.message.ts,
+              payload.message,
               payload.channel.id,
               reason.comment,
-              phones[0],
-              phones[1],
             );
             slackUpdateMessage(objectArg);
           }
