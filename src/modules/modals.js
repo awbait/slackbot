@@ -31,7 +31,7 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, worker, company)
 
   switch (type) {
     case 'company':
-      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Компания: ${company.first_name}`;
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с номера: ${phoneFromFormatted}`;
 
       companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`;
@@ -39,7 +39,7 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, worker, company)
       statusValue = `${company.id}`;
       break;
     case 'company_worker':
-      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Компания: ${company.first_name} Сотрудник: ${worker.last_name} ${worker.first_name} ${worker.middle_name}`;
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с номера: ${phoneFromFormatted}`;
 
       companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`;
@@ -48,16 +48,16 @@ export function templateIncallMessage(type, phoneFrom, phoneTo, worker, company)
       statusValue = `${company.id}_${worker.id}`;
       break;
     case 'worker':
-      messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Сотрудник: ${worker.last_name} ${worker.first_name} ${worker.middle_name}`;
       message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nПредположительно: *<${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name}>*\nЗвонок с номера: ${phoneFromFormatted}`;
 
       workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name} ${worker.middle_name}>`;
       break;
     default:
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
-      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с неизвестного номера: ${phoneFromFormatted}`;
+      message = `Коллеги, входящий звонок на ${phoneToFormatted}!\nЗвонок с номера: ${phoneFromFormatted}`;
 
-      undefinedObject.text = ':question: Номер неизвестен :question:';
+      undefinedObject.text = ':question: Номер неизвестен';
       break;
   }
 
@@ -418,7 +418,6 @@ export function blacklistLoaderMessageUpdate(message, channel) {
  */
 export function blacklistMessageUpdate(userId, message, channel, reason) {
   const msg = message;
-
   const result = {
     type: 'context',
     elements: [
@@ -750,7 +749,7 @@ export function notifyAddStatus(channel, timestamp, message, status, comment, us
     workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${workerData.id}|${workerData.last_name} ${workerData.first_name} ${workerData.middle_name}>`;
     blocks[1].elements.push(workerObject);
   } else {
-    undefinedObject.text = ':question: Номер неизвестен :question:';
+    undefinedObject.text = ':question: Номер неизвестен';
     blocks[1].elements.push(undefinedObject);
   }
 
