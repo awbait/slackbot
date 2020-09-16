@@ -8,29 +8,29 @@ export function stringToArr(string) {
 }
 
 /**
- * Генерация случайной строки
- * @param  {string} string - Добавит указанную строку перед сгенерированным id
- */
+   * Генерация случайной строки
+   * @param  {string} string - Добавит указанную строку перед сгенерированным id
+   */
 export function generateId(string) {
   const random = `f${(+new Date()).toString(16)}`;
   return string ? string + random : random;
 }
 
 /**
- * Объединить два объекта
- * @param  {object} sourceObj
- * @param  {object} mutableObj
- */
+   * Объединить два объекта
+   * @param  {object} sourceObj
+   * @param  {object} mutableObj
+   */
 export function objectAssign(sourceObj, mutableObj) {
   const result = Object.assign(sourceObj, mutableObj);
   return result;
 }
 
 /**
- * Форматирует номера телефонов
- * @param  {string} number - Номер телефона
- * @param  {boolean} code - Необязательная переменная, true - если нужно добавить код телефона
- */
+   * Форматирует номера телефонов
+   * @param  {string} number - Номер телефона
+   * @param  {boolean} code - Необязательная переменная, true - если нужно добавить код телефона
+   */
 export function formatPhoneNumber(number, code) {
   let phone = (`${number}`).replace(/\D/g, '');
   const match = phone.match(/^(7|)?(\d{3})(\d{3})(\d{2})(\d{2})$/);
