@@ -3,7 +3,7 @@ import path from 'path';
 import sharp from 'sharp';
 import { exec } from 'child_process';
 import { handleExternalData, addCommentToAppealMsg } from '../modules/slack/main.mjs';
-import { getClientAvatarById } from '../modules/slack/request_old.mjs';
+import { getClientAvatarById } from '../modules/slack/request.mjs';
 import logger from '../modules/logger/main.mjs';
 
 const dirname = path.resolve();
@@ -14,8 +14,9 @@ const dirname = path.resolve();
  * @param  {object} res
  */
 export function appealThread(req, res) {
-  logger.trace('POST /crm/appeal_thread:', req.body);
-  addCommentToAppealMsg(req.body);
+  const data = req.body;
+  logger.trace('POST /crm/appeal_thread:', data);
+  addCommentToAppealMsg(data);
   res.status(200).end();
 }
 /**

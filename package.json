@@ -13,7 +13,7 @@
     "@slack/client": "^5.0.2",
     "@slack/events-api": "^2.3.3",
     "@slack/interactive-messages": "^1.7.0",
-    "@slack/web-api": "^5.11.0",
+    "@slack/web-api": "^5.12.0",
     "async-redis": "^1.1.7",
     "axios": "^0.20.0",
     "ding-dong": "^0.1.7",
@@ -21,8 +21,6 @@
     "express": "^4.17.1",
     "log4js": "^6.2.1",
     "mongoose": "^5.9.25",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.5",
     "sharp": "^0.25.4"
   },
   "devDependencies": {

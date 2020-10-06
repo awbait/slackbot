@@ -4,7 +4,7 @@ import fs from 'fs';
 import logger from '../logger/main.mjs';
 
 dotenv.config();
-const url = 'http://192.168.79.31';
+const url = process.env.REQUEST_URL;
 
 const storageToken = {
   'access-token': null,

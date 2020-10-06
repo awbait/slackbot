@@ -1,4 +1,6 @@
 import dotenv from 'dotenv';
+import logger from '../logger/main.mjs';
+import * as request from './request.mjs';
 import { formatPhoneNumber, objectAssign } from '../other/utils.mjs';
 
 dotenv.config();
@@ -1018,4 +1020,158 @@ export function generateEDWorkers(workers) {
     json.options.push(object);
   });
   return json;
+}
+
+export async function sendAppealFromEmail(data) {
+  const template = {
+    text: 'Коллеги, новое обращение на help@lhost.su',
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Коллеги, новое обращение на help@lhost.su',
+        },
+      },
+      {
+        type: 'context',
+        elements: [],
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'context',
+        elements: [],
+      },
+    ],
+  };
+
+  if (data.company_id && data.company_id !== '0') {
+    const company = await request.getClientById(data.company_id);
+    const companyObject = {
+      type: 'mrkdwn',
+      text: `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`,
+    };
+    template.blocks[1].elements.push(companyObject);
+  }
+
+  if (data.employee_id && data.employee_id !== '0') {
+    const employee = await request.getClientById(data.employee_id);
+    const workerObject = {
+      type: 'mrkdwn',
+      text: `:pig: *Сотрудник:* <${frontUrl}/#/clients/${employee.id}|${employee.last_name} ${employee.first_name} ${employee.middle_name}>`,
+    };
+    template.blocks[1].elements.push(workerObject);
+  }
+
+  if (data.employee_id === '0' && data.company_id === '0') {
+    const emailObject = {
+      type: 'mrkdwn',
+    };
+    if (data.email) {
+      emailObject.text = `:email: *Отправитель:* ${data.email}`;
+    } else {
+      emailObject.text = ':email: *Отправитель:* Неизвестен';
+    }
+    template.blocks[1].elements.push(emailObject);
+  }
+
+  if (data.appeal_id) {
+    const appealObject = {
+      type: 'mrkdwn',
+      text: `:notebook: *Обращение:* <${frontUrl}/#/support/troubles/${data.appeal_id}/comments|#${data.appeal_id}>`,
+    };
+    template.blocks[3].elements.push(appealObject);
+  }
+
+  if (data.text) {
+    const comment = data.text.substr(0, 30);
+    const appealObject = {
+      type: 'mrkdwn',
+      text: `:memo: *Комментарий:* ${comment}`,
+    };
+    template.blocks[3].elements.push(appealObject);
+  }
+
+  return template;
+}
+
+export async function sendAppealFromCRM(datas) {
+  const data = datas;
+  if (data.employee_id || data.employee_id === '0' || data.employee_id === '') { data.employee_id = null; }
+  if (data.company_id || data.company_id === '0' || data.company_id === '') { data.company_id = null; }
+  logger.info(data);
+  const template = {
+    text: 'Коллеги, новое обращение CRM',
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Коллеги, новое обращение CRM',
+        },
+      },
+      {
+        type: 'context',
+        elements: [],
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'context',
+        elements: [],
+      },
+    ],
+  };
+
+  if (data.company_id) {
+    const company = await request.getClientById(data.company_id);
+    const companyObject = {
+      type: 'mrkdwn',
+      text: `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`,
+    };
+    template.blocks[1].elements.push(companyObject);
+  }
+
+  if (data.employee_id) {
+    const employee = await request.getClientById(data.employee_id);
+    const workerObject = {
+      type: 'mrkdwn',
+      text: `:pig: *Сотрудник:* <${frontUrl}/#/clients/${employee.id}|${employee.last_name} ${employee.first_name} ${employee.middle_name}>`,
+    };
+    template.blocks[1].elements.push(workerObject);
+  }
+
+  if (!data.employee_id && !data.company_id) {
+    const emailObject = {
+      type: 'mrkdwn',
+    };
+    if (data.email) {
+      emailObject.text = `:email: *Отправитель:* ${data.email}`;
+    } else {
+      emailObject.text = ':email: *Отправитель:* Неизвестен';
+    }
+    template.blocks[1].elements.push(emailObject);
+  }
+
+  if (data.appeal_id) {
+    const appealObject = {
+      type: 'mrkdwn',
+      text: `:notebook: *Обращение:* <${frontUrl}/#/support/troubles/${data.appeal_id}/comments|#${data.appeal_id}>`,
+    };
+    template.blocks[3].elements.push(appealObject);
+  }
+
+  if (data.text) {
+    const comment = data.text.substr(0, 30);
+    const appealObject = {
+      type: 'mrkdwn',
+      text: `:memo: *Комментарий:* ${comment}`,
+    };
+    template.blocks[3].elements.push(appealObject);
+  }
+
+  return template;
 }

@@ -146,19 +146,19 @@ slackInteractions.viewSubmission('create-appeal', async (payload) => {
   if (payloadValues.notify_status) {
     metadata.status = payloadValues.notify_status.status.selected_option.value;
   }
-  if (payloadValues.appeal_company && payloadValues.appeal_company.company.selected_option) {
+  if (payloadValues.appeal_company?.company.selected_option) {
     metadata.company_id = payloadValues.appeal_company.company.selected_option.value;
   }
-  if (payloadValues.appeal_worker && payloadValues.appeal_worker.append.selected_option) {
+  if (payloadValues.appeal_worker?.append.selected_option) {
     metadata.worker_id = payloadValues.appeal_worker.append.selected_option.value;
   }
-  if (payloadValues.appeal_worker) {
-    if (payloadValues.appeal_worker.append) {
-      if (payloadValues.appeal_worker.append.type === 'checkboxes') {
-        delete metadata.worker_id;
-      }
-    }
+
+  // FIXME:: Скорее всего теперь это не работает
+  // Хотя если определился сотрудник?
+  if (payloadValues.appeal_worker?.append?.type === 'checkboxes') {
+    delete metadata.worker_id;
   }
+
   let company; let worker;
   if (metadata.company_id) {
     company = await request.getClientById(metadata.company_id);
@@ -166,12 +166,12 @@ slackInteractions.viewSubmission('create-appeal', async (payload) => {
   if (metadata.worker_id) {
     worker = await request.getClientById(metadata.worker_id);
   }
-
-  if (metadata.company_id && payloadValues.appeal_worker) {
+  if (metadata.company_id && payloadValues.appeal_worker?.append?.selected_options.length !== 0) {
     if (payloadValues.appeal_worker.append.selected_options) {
       delete metadata.worker_id;
+      // FIXME:: external_id больше не используется
       const appealSearchClient = objectAssign(templates.appealSearchClient(metadata), { external_id: generateId('modal_appealcreate_'), private_metadata: JSON.stringify(metadata) });
-      slackWeb.openModal(payload.trigger_id, appealSearchClient);
+      slackWeb.updateModal(payload.trigger_id, appealSearchClient);
       return;
     }
   }

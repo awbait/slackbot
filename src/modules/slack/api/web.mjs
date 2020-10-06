@@ -13,13 +13,18 @@ export async function getUserInfo(user) {
 }
 
 export async function sendMessage(object) {
-  const result = await web.chat.postMessage(object);
-  logger.info(`SLACK:: Отправлено сообщение в ${object.channel}`, result.message.text);
+  const response = await web.chat.postMessage(object);
+  logger.info(`SLACK:: Отправлено сообщение в ${object.channel}`, response.message.text);
+  return response;
 }
 
 export async function updateMessage(object) {
-  const result = await web.chat.update(object);
-  logger.info('SLACK: updateMessage:: Обновлено сообщение: ', result.ts);
+  try {
+    const result = await web.chat.update(object);
+    logger.info('SLACK: updateMessage:: Обновлено сообщение: ', result.ts);
+  } catch (error) {
+    logger.error(error, error.data);
+  }
 }
 
 export async function openModal(trigger, template) {

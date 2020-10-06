@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import logger from '../logger/main.mjs';
 import * as request from './request.mjs';
 import * as templates from './templates.mjs';
 import * as database from '../mongo/database.mjs';
@@ -21,15 +22,78 @@ const channelsType = {
  * Отправить новый комментарий обращения в thread, если таковая есть в базе.
  * @param  {string} comment - Комментарий
  */
-export async function addCommentToAppealMsg(comment) {
-  const ts = await database.findAppealById(comment.ticket_id);
-  if (ts) {
-    webSlack.sendMessage({
-      thread_ts: ts.message_ts,
-      reply_broadcast: true,
-      channel: 'CDH9N4QNL', // TODO: Добавить его в базу?
-      text: comment.text,
-    });
+export async function addCommentToAppealMsg(data) {
+  const appeal = await database.findAppealById(data.ticket_id);
+  logger.info(appeal);
+  logger.info(data.type_id);
+  switch (parseInt(data.type_id, 10)) {
+    case 1:
+      // Отправлено через CRM
+      if (appeal) {
+        // Обращение в слаке найдено, отправляем сообщение в тред
+        webSlack.sendMessage({
+          thread_ts: appeal.message_ts,
+          reply_broadcast: true,
+          channel: 'GCPSTLV0T',
+          text: data.text,
+        });
+      } else {
+        const template = await templates.sendAppealFromCRM(data);
+
+        const response = await webSlack.sendMessage({
+          channel: 'GCPSTLV0T',
+          text: template.text,
+          blocks: template.blocks,
+        });
+
+        if (response) {
+          webSlack.sendMessage({
+            thread_ts: response.ts,
+            reply_broadcast: true,
+            channel: 'GCPSTLV0T',
+            text: data.text,
+          });
+        }
+        // Создать новое обращение в Slack через CRM
+      }
+      break;
+
+    case 2:
+      // Отправлено через почту
+      if (appeal) {
+        // Обращение в слаке найдено, отправляем сообщение в тред
+        logger.trace('Обращение в слаке найдено, отправляем сообщение в тред');
+        webSlack.sendMessage({
+          thread_ts: appeal.message_ts,
+          reply_broadcast: true,
+          channel: 'GCPSTLV0T',
+          text: data.text,
+        });
+      } else {
+        // Создать новое обращение в Slack через Почту
+        logger.trace('Создать новое обращение в Slack через Почту');
+        const template = await templates.sendAppealFromEmail(data);
+
+        const response = await webSlack.sendMessage({
+          channel: 'GCPSTLV0T',
+          text: template.text,
+          blocks: template.blocks,
+        });
+
+        if (response) {
+          webSlack.sendMessage({
+            thread_ts: response.ts,
+            reply_broadcast: true,
+            channel: 'GCPSTLV0T',
+            text: data.text,
+          });
+        }
+      }
+
+      break;
+    default:
+      logger.trace('default CASE');
+      break;
   }
 }
 
@@ -89,7 +153,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       channel: channels[phoneTo],
       text: template.text,
       blocks: template.blocks,
-      icon_url: avatar, // FIXME:: Не работают аватары
+      icon_url: avatar,
     });
   }
 }
