@@ -20,6 +20,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "log4js": "^6.2.1",
+    "mail-notifier": "^0.5.0",
     "mongoose": "^5.9.25",
     "sharp": "^0.25.4"
   },

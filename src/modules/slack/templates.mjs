@@ -15,7 +15,7 @@ const frontUrl = process.env.FRONT_URL;
  * @param  {integer} worker - Сотрудник
  * @param  {integer} company - Компания
  */
-export function incallMessage(type, channelType, phoneFrom, phoneTo, worker, company) {
+export function incallMessage(type, channelType, phoneFrom, phoneTo, phoneInfo, company) {
   const phoneFromFormatted = formatPhoneNumber(phoneFrom, true);
   const phoneToFormatted = formatPhoneNumber(phoneTo);
 
@@ -50,20 +50,30 @@ export function incallMessage(type, channelType, phoneFrom, phoneTo, worker, com
       appealButton.company_id = company.id;
       break;
     case 'company_worker':
-      messagePretext = `Входящий звонок на ${phoneToFormatted}! Компания: ${company.first_name} Сотрудник: ${worker.last_name} ${worker.first_name} ${worker.middle_name}`;
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Компания: ${company.first_name} Сотрудник: ${phoneInfo.last_name} ${phoneInfo.first_name} ${phoneInfo.middle_name}`;
       message = `Коллеги, входящий звонок: ${phoneFromFormatted}`;
 
       companyObject.text = `:office: *Компания:* <${frontUrl}/#/clients/${company.id}|${company.first_name}>`;
-      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${worker.id}|${worker.last_name} ${worker.first_name} ${worker.middle_name}>`;
+      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/clients/${phoneInfo.id}|${phoneInfo.last_name} ${phoneInfo.first_name} ${phoneInfo.middle_name}>`;
 
       appealButton.company_id = company.id;
-      appealButton.worker_id = worker.id;
+      appealButton.worker_id = phoneInfo.id;
       break;
     case 'worker':
-      messagePretext = `Входящий звонок на ${phoneToFormatted}! Сотрудник: ${worker.last_name} ${worker.first_name} ${worker.middle_name}`;
-      message = `Коллеги, входящий звонок: ${phoneFromFormatted}! Предположительно: *<${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name}>*`;
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Сотрудник: ${phoneInfo?.last_name} ${phoneInfo?.first_name} ${phoneInfo?.middle_name}`;
+      message = `Коллеги, входящий звонок: ${phoneFromFormatted}! Предположительно: *<${frontUrl}/#/workers/${phoneInfo.id}|${phoneInfo.last_name} ${phoneInfo.first_name}>*`;
 
-      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/workers/${worker.id}|${worker.last_name} ${worker.first_name} ${worker.middle_name}>`;
+      workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/workers/${phoneInfo.id}|${phoneInfo.last_name} ${phoneInfo.first_name} ${phoneInfo.middle_name}>`;
+      break;
+    case 'yandex':
+      messagePretext = `Входящий звонок на ${phoneToFormatted}! Вероятно: ${phoneInfo.features[0].properties.CompanyMetaData.name}`;
+      message = `Коллеги, входящий звонок: ${phoneFromFormatted}`;
+
+      if (phoneInfo.features[0].properties.CompanyMetaData?.url) {
+        companyObject.text = `:office: *Компания:* <${phoneInfo.features[0].properties.CompanyMetaData.url}|${phoneInfo.features[0].properties.CompanyMetaData.name}>`;
+      } else {
+        companyObject.text = `:office: *Компания:* ${phoneInfo.features[0].properties.CompanyMetaData.name}`;
+      }
       break;
     default:
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Звонок с номера: ${phoneFrom}`;
@@ -174,6 +184,9 @@ export function incallMessage(type, channelType, phoneFrom, phoneTo, worker, com
       break;
     case 'worker':
       template.blocks[1].elements.push(workerObject);
+      break;
+    case 'yandex':
+      template.blocks[1].elements.push(companyObject);
       break;
     default:
       template.blocks[1].elements.push(undefinedObject);

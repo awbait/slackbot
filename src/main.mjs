@@ -5,8 +5,10 @@ import routes from './routes.mjs';
 import asterisk from './modules/asterisk/main.mjs';
 import * as database from './modules/mongo/database.mjs';
 import logger from './modules/logger/main.mjs';
+import mailNotify from './modules/mail-alerts/index.mjs';
 
 asterisk();
+mailNotify();
 database.init();
 const app = express();
 
@@ -18,4 +20,10 @@ app.use(routes);
 
 const listener = app.listen(process.env.PORT, () => {
   logger.info(`EXPRESS:: Server running on ${listener.address().port} port`);
+});
+
+process.on('SIGINT', () => {
+  database.disconnect((err) => {
+    process.exit(err ? 1 : 0);
+  });
 });

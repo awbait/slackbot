@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import logger from '../logger/main.mjs';
 import * as request from './request.mjs';
+import { getYandexCompanyInfo } from './request/yandex-api.mjs';
 import * as templates from './templates.mjs';
 import * as database from '../mongo/database.mjs';
 import * as webSlack from './api/web.mjs';
@@ -128,6 +129,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
     let avatar = 'https://i.imgur.com/OTQR7sr.png';
     const channelType = channelsType[phoneTo];
 
+    // Запрашиваем информацию о номере из CRM
     const client = await request.getNameCaller(phoneFrom);
 
     if (client) {
@@ -146,7 +148,13 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       if (worker) {
         template = templates.incallMessage('worker', channelType, phoneFrom, phoneTo, client);
       } else {
-        template = templates.incallMessage(null, channelType, phoneFrom, phoneTo);
+        // Запрашиваем информацию о номере у Яндекса
+        const phoneInfo = await getYandexCompanyInfo(phoneFrom);
+        if (phoneInfo.features.length > 0) {
+          template = templates.incallMessage('yandex', channelType, phoneFrom, phoneTo, phoneInfo);
+        } else {
+          template = templates.incallMessage(null, channelType, phoneFrom, phoneTo);
+        }
       }
     }
     webSlack.sendMessage({

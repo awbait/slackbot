@@ -18,6 +18,12 @@ export function init() {
   });
 }
 
+export function disconnect() {
+  mongoose.connection.close(() => {
+    logger.trace('DATABASE: Disconnect');
+  });
+}
+
 export function createAppeal(appealId, messageTs) {
   const appeal = new Appeal({
     appeal_id: appealId,
