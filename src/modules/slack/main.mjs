@@ -158,7 +158,7 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       }
     }
     webSlack.sendMessage({
-      channel: channels[phoneTo],
+      channel: channels[phoneTo], // TODO: Вынести в базу
       text: template.text,
       blocks: template.blocks,
       icon_url: avatar,

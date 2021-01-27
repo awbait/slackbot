@@ -25,7 +25,8 @@ function sendSlackAlertFromMail(mail) {
 }
 
 export default function init() {
-  notifier(imap)
+  const n = notifier(imap);
+  n.on('end', () => n.start())
     .on('mail', (mail) => {
       sendSlackAlertFromMail(mail);
     })

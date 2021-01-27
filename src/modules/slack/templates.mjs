@@ -61,7 +61,7 @@ export function incallMessage(type, channelType, phoneFrom, phoneTo, phoneInfo, 
       break;
     case 'worker':
       messagePretext = `Входящий звонок на ${phoneToFormatted}! Сотрудник: ${phoneInfo?.last_name} ${phoneInfo?.first_name} ${phoneInfo?.middle_name}`;
-      message = `Коллеги, входящий звонок: ${phoneFromFormatted}! Предположительно: *<${frontUrl}/#/workers/${phoneInfo.id}|${phoneInfo.last_name} ${phoneInfo.first_name}>*`;
+      message = `Коллеги, входящий звонок: ${phoneFromFormatted}! Предположительно: *${phoneInfo.last_name} ${phoneInfo.first_name}*`;
 
       workerObject.text = `:pig: *Сотрудник:* <${frontUrl}/#/workers/${phoneInfo.id}|${phoneInfo.last_name} ${phoneInfo.first_name} ${phoneInfo.middle_name}>`;
       break;
