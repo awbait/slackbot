@@ -39,6 +39,7 @@ const getAuthToken = async () => {
   try {
     const options = {
       method: 'POST',
+      timeout: 3000,
       url: `${url}/auth/sign_in`,
       data: {
         username: 'bot',
@@ -63,6 +64,7 @@ const validateAuthToken = async () => {
   try {
     const options = {
       url: `${url}/auth/validate_token`,
+      timeout: 3000,
       data: {
         client: storageToken.client,
         uid: storageToken.uid,
@@ -176,11 +178,11 @@ export const checkPhoneBlacklist = async (phoneNumber) => {
     };
     const response = await request(options);
 
-    logger.debug(`REQUEST: checkPhoneBlacklist:: Статус: ${response.status}. Запрос выполнился за: ${response.duration / 1000} s`);
+    // logger.debug(`REQUEST: checkPhoneBlacklist:: Статус: ${response.status}. Запрос выполнился за: ${response.duration / 1000} s`);
     logger.trace('REQUEST-HEADERS: checkPhoneBlacklist::', response.headers);
     return response.data;
   } catch (error) {
-    logger.error(`REQUEST: checkPhoneBlacklist:: Статус: ${error.response.status}. Описание: ${error.response.statusText}. Запрос выполнился за: ${error.duration / 1000} s`);
+    // logger.error(`REQUEST: checkPhoneBlacklist:: Статус: ${error.response.status}. Описание: ${error.response.statusText}. Запрос выполнился за: ${error.duration / 1000} s`);
     return null;
   }
 };
