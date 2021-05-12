@@ -5,6 +5,7 @@ import { getYandexCompanyInfo } from './request/yandex-api.mjs';
 import * as templates from './templates.mjs';
 import * as database from '../mongo/database.mjs';
 import * as webSlack from './api/web.mjs';
+import e from 'express';
 
 dotenv.config();
 
@@ -118,7 +119,9 @@ export async function handleExternalData(res, payload) {
       break;
   }
 }
-
+/*
+  FIX:: DELETE
+*/
 export async function sendCallerNotify(phoneFrom, phoneTo) {
   const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
 
@@ -135,10 +138,10 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
     if (client) {
       if (client.is_company) {
         template = templates.incallMessage('company', channelType, phoneFrom, phoneTo, null, client);
-        avatar = `http://81.29.128.59:30005/crm/company/${client.id}/avatar`;
+        avatar = `http://sip.lhost.su:30005/crm/company/${client.id}/avatar`;
       } else if (client.company) {
         const company = await request.getClientById(client.company);
-        avatar = `http://81.29.128.59:30005/crm/company/${company.id}/avatar`;
+        avatar = `http://sip.lhost.su:30005/crm/company/${company.id}/avatar`;
         template = templates.incallMessage('company_worker', channelType, phoneFrom, phoneTo, client, company);
       } else {
         template = templates.incallMessage('worker', channelType, phoneFrom, phoneTo, client);
@@ -163,6 +166,71 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
       blocks: template.blocks,
       icon_url: avatar,
     });
+  }
+}
+
+/**
+ * Функция формирования и отправки сообщения о входящем вызове на номера компании
+ *
+ * @param  {string} phoneFrom - Номер телефона с которого совершен вызов
+ * @param  {string} phoneTo - Номер телефона на который совершен вызов
+ */
+export async function incomingCallNotificationMessage(phoneFrom, phoneTo) {
+  // Проверяем находится ли номер в черном списке
+  const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
+
+  if (isBlacklisted) {
+    // TODO: Отправить сообщение о попытке вызова с N номера
+  } else {
+    let template;
+    // Запрашиваем информацию о номере из CRM
+    const client = await request.getNameCaller(phoneFrom);
+
+    if (client) {
+      if (client.is_company) {
+        // Звонят с номера, принадлежащий компании
+        template = incomingCallNotificationMessageTemplateCompany(phoneFrom, phoneTo, client);
+      } else if (client.company) {
+        // Звонит сотрудник, который присоединён к какой-либо компании
+        // client.company - id компании
+      } else {
+        // Звонит сотрудник без компании
+
+      }
+
+
+
+
+
+
+
+
+
+
+      
+        // template = templates.incallMessage('company', channelType, phoneFrom, phoneTo, null, client);
+        // avatar = `http://sip.lhost.su:30005/crm/company/${client.id}/avatar`;
+      } else if (client.company) {
+        const company = await request.getClientById(client.company);
+        // avatar = `http://sip.lhost.su:30005/crm/company/${company.id}/avatar`;
+        // template = templates.incallMessage('company_worker', channelType, phoneFrom, phoneTo, client, company);
+      } else {
+        // template = templates.incallMessage('worker', channelType, phoneFrom, phoneTo, client);
+      }
+    } else {
+      const worker = await request.getWorkerByPhone(phoneFrom);
+      if (worker) {
+        template = templates.incallMessage('worker', channelType, phoneFrom, phoneTo, client);
+      } else {
+        // Запрашиваем информацию о номере у Яндекса
+        const phoneInfo = await getYandexCompanyInfo(phoneFrom);
+        if (phoneInfo.features.length > 0) {
+          template = templates.incallMessage('yandex', channelType, phoneFrom, phoneTo, phoneInfo);
+        } else {
+          template = templates.incallMessage(null, channelType, phoneFrom, phoneTo);
+        }
+      }
+    }
   }
 }
 
