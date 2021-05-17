@@ -6,10 +6,13 @@ import asterisk from './modules/asterisk/main.mjs';
 import * as database from './modules/mongo/database.mjs';
 import logger from './modules/logger/main.mjs';
 import mailNotify from './modules/mail-alerts/index.mjs';
+import * as tgBot from './modules/external/telegram.mjs';
 
 asterisk();
 mailNotify();
 database.init();
+tgBot.init();
+
 const app = express();
 
 app.use('/slack/events', slackEvents.requestListener());

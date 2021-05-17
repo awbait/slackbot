@@ -5,7 +5,6 @@ import { getYandexCompanyInfo } from './request/yandex-api.mjs';
 import * as templates from './templates.mjs';
 import * as database from '../mongo/database.mjs';
 import * as webSlack from './api/web.mjs';
-import e from 'express';
 
 dotenv.config();
 
@@ -175,6 +174,8 @@ export async function sendCallerNotify(phoneFrom, phoneTo) {
  * @param  {string} phoneFrom - Номер телефона с которого совершен вызов
  * @param  {string} phoneTo - Номер телефона на который совершен вызов
  */
+
+/*
 export async function incomingCallNotificationMessage(phoneFrom, phoneTo) {
   // Проверяем находится ли номер в черном списке
   const isBlacklisted = await request.checkPhoneBlacklist(phoneFrom);
@@ -196,24 +197,14 @@ export async function incomingCallNotificationMessage(phoneFrom, phoneTo) {
       } else {
         // Звонит сотрудник без компании
 
-      }
-
-
-
-
-
-
-
-
-
-
-      
-        // template = templates.incallMessage('company', channelType, phoneFrom, phoneTo, null, client);
+        // template =
+        // templates.incallMessage('company', channelType, phoneFrom, phoneTo, null, client);
         // avatar = `http://sip.lhost.su:30005/crm/company/${client.id}/avatar`;
       } else if (client.company) {
         const company = await request.getClientById(client.company);
         // avatar = `http://sip.lhost.su:30005/crm/company/${company.id}/avatar`;
-        // template = templates.incallMessage('company_worker', channelType, phoneFrom, phoneTo, client, company);
+        // template = templates.incallMessage
+        // ('company_worker', channelType, phoneFrom, phoneTo, client, company);
       } else {
         // template = templates.incallMessage('worker', channelType, phoneFrom, phoneTo, client);
       }
@@ -233,7 +224,7 @@ export async function incomingCallNotificationMessage(phoneFrom, phoneTo) {
     }
   }
 }
-
+*/
 /**
  * Реализация команды 'searchclient'.
  * @param  {string} triggerId

@@ -1,5 +1,6 @@
 import notifier from 'mail-notifier';
 import * as webSlack from '../slack/api/web.mjs';
+import * as tgBot from '../external/telegram.mjs';
 
 const imap = {
   user: 'zbx.notification@gmail.com',
@@ -22,6 +23,11 @@ function sendSlackAlertFromMail(mail) {
     text: mail.subject,
     icon_emoji: emoji,
   });
+
+  // if mail thread содержит слово "Сайт"
+  if (mail.subject.includes('Сайт')) {
+    tgBot.sendNotifyToTelegram(mail.subject);
+  }
 }
 
 export default function init() {
