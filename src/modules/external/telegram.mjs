@@ -17,7 +17,7 @@ export function init() {
   bot.launch();
 }
 
-export default function sendNotifyToTelegram(message) {
+export function sendNotifyToTelegram(message) {
   arr.forEach((chatId) => {
     bot.telegram.sendMessage(chatId, message);
   });
